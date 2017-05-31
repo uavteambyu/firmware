@@ -38,6 +38,7 @@
 #include "sensors.h"
 #include "rc.h"
 #include "controller.h"
+#include "mixer.h"
 
 #include "mavlink_receive.h"
 #include "mavlink_log.h"
@@ -185,12 +186,26 @@ static void mavlink_handle_msg_offboard_control(const mavlink_message_t *const m
   _new_command = true;
 }
 
+static void mavlink_handle_msg_rosflight_aux_cmd(const mavlink_message_t * const msg)
+{
+  mavlink_rosflight_aux_cmd_t aux_cmd_msg;
+  mavlink_msg_rosflight_aux_cmd_decode(msg, &aux_cmd_msg);
+  for (uint8_t i = 0; i < 8; i++)
+  {
+    _aux_command_type[i] = aux_cmd_msg.type_array[i];
+    _aux_command_values[i] = aux_cmd_msg.aux_cmd_array[i];
+  }
+}
+
 static void handle_mavlink_message(void)
 {
   switch (in_buf.msgid)
   {
   case MAVLINK_MSG_ID_OFFBOARD_CONTROL:
     mavlink_handle_msg_offboard_control(&in_buf);
+    break;
+  case MAVLINK_MSG_ID_ROSFLIGHT_AUX_CMD:
+    mavlink_handle_msg_rosflight_aux_cmd(&in_buf);
     break;
   case MAVLINK_MSG_ID_PARAM_REQUEST_LIST:
     mavlink_handle_msg_param_request_list();

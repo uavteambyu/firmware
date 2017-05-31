@@ -1,22 +1,22 @@
 /* 
  * Copyright (c) 2017, James Jackson and Daniel Koch, BYU MAGICC Lab
- * 
+ *
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- * 
+ *
  * * Redistributions of source code must retain the above copyright notice, this
  *   list of conditions and the following disclaimer.
- * 
+ *
  * * Redistributions in binary form must reproduce the above copyright notice,
  *   this list of conditions and the following disclaimer in the documentation
  *   and/or other materials provided with the distribution.
- * 
+ *
  * * Neither the name of the copyright holder nor the names of its
  *   contributors may be used to endorse or promote products derived from
  *   this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -46,6 +46,9 @@ extern "C" {
 static float prescaled_outputs[8];
 float _outputs[8];
 command_t _command;
+
+float _aux_command_values[8];
+output_type_t _aux_command_type[8];
 
 static mixer_t quadcopter_plus_mixing =
 {
@@ -249,19 +252,36 @@ void mix_output()
     scale_factor = 1.0/max_output;
   }
 
-  // Add in GPIO inputs from Onboard Computer
   for (int8_t i=0; i<8; i++)
   {
-    // Write output to motors
-    if (mixer_to_use->output_type[i] == S)
+    // Mix in GPIO from computer
+    if (_aux_command_type[i])
     {
-      write_servo(i, prescaled_outputs[i]);
+      switch(_aux_command_type[i])
+      {
+      case S:
+        write_servo(i, _aux_command_values[i]);
+        break;
+      case M:
+        write_motor(i, _aux_command_values[i]);
+        break;
+      default:
+        break;
+      }
     }
-    else if (mixer_to_use->output_type[i] == M)
+    else
     {
-      // scale all motor outputs by scale factor (this is usually 1.0, unless we saturated)
-      prescaled_outputs[i] *= scale_factor;
-      write_motor(i, prescaled_outputs[i]);
+      // Write output to motors
+      if (mixer_to_use->output_type[i] == S)
+      {
+        write_servo(i, prescaled_outputs[i]);
+      }
+      else if (mixer_to_use->output_type[i] == M)
+      {
+        // scale all motor outputs by scale factor (this is usually 1.0, unless we saturated)
+        prescaled_outputs[i] *= scale_factor;
+        write_motor(i, prescaled_outputs[i]);
+      }
     }
   }
 }

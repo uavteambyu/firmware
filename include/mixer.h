@@ -79,8 +79,8 @@ typedef struct
 
 extern command_t _command;
 
-extern float _GPIO_outputs[8];
-extern output_type_t _GPIO_output_type[8];
+extern float _aux_command_values[8];
+extern output_type_t _aux_command_type[8];
 
 extern float _outputs[8];
 
