@@ -1,22 +1,22 @@
-/* 
+/*
  * Copyright (c) 2017, James Jackson and Daniel Koch, BYU MAGICC Lab
- * 
+ *
  * All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- * 
+ *
  * * Redistributions of source code must retain the above copyright notice, this
  *   list of conditions and the following disclaimer.
- * 
+ *
  * * Redistributions in binary form must reproduce the above copyright notice,
  *   this list of conditions and the following disclaimer in the documentation
  *   and/or other materials provided with the distribution.
- * 
+ *
  * * Neither the name of the copyright holder nor the names of its
  *   contributors may be used to endorse or promote products derived from
  *   this software without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
@@ -47,6 +47,7 @@
 armed_state_t _armed_state;
 error_state_t _error_state;
 
+
 void init_mode(void)
 {
   _armed_state = 0x00;
@@ -55,24 +56,40 @@ void init_mode(void)
 
 bool arm(void)
 {
-  static bool started_gyro_calibration = false;
   if (_error_state)
   {
     mavlink_log_error("Unable to arm due to error code %d", _error_state);
     return false;
   }
-  if (!started_gyro_calibration && !(_armed_state & ARMED))
+
+  else if (get_param_int(PARAM_CALIBRATE_GYRO_ON_ARM))
   {
-    start_gyro_calibration();
-    started_gyro_calibration = true;
+    static bool started_gyro_calibration = false;
+    if (!started_gyro_calibration && !(_armed_state & ARMED))
+    {
+      start_gyro_calibration();
+      started_gyro_calibration = true;
+      return false;
+    }
+    else if (gyro_calibration_complete())
+    {
+      started_gyro_calibration = false;
+      _armed_state |= ARMED;
+      led1_on();
+      return true;
+    }
     return false;
   }
-  else if (gyro_calibration_complete())
+
+  else
   {
-    started_gyro_calibration = false;
-    _armed_state |= ARMED;
-    led1_on();
-    return true;
+    if (!(_armed_state & ARMED))
+    {
+      _armed_state |= ARMED;
+      led1_on();
+      return true;
+    }
+    return false;
   }
   return false;
 }
@@ -101,7 +118,7 @@ bool check_failsafe(void)
     // go into failsafe if we get an invalid RC command for any channel
     for (int8_t i = 0; i<get_param_int(PARAM_RC_NUM_CHANNELS); i++)
     {
-      if(pwm_read(i) < 900 || pwm_read(i) > 2100)
+      if (pwm_read(i) < 900 || pwm_read(i) > 2100)
       {
         failsafe = true;
       }
@@ -130,6 +147,10 @@ bool check_failsafe(void)
 
     // clear the RC Lost error
     _error_state &= ~(ERROR_RC_LOST);
+    if (_armed_state & ARMED)
+      led1_on();
+    else
+      led1_off();
   }
 
   return failsafe;
@@ -204,7 +225,7 @@ bool check_mode()
     {
       if (rc_switch(RC_SWITCH_ARM))
       {
-        if ( !(_armed_state & ARMED))
+        if (!(_armed_state & ARMED))
           arm();
       }
       else

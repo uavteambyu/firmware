@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (c) 2017, James Jackson and Daniel Koch, BYU MAGICC Lab
  *
  * All rights reserved.
@@ -71,16 +71,6 @@ static mixer_t quadcopter_x_mixing =
   {-1.0f, 1.0f, 1.0f,-1.0f,  0.0f, 0.0f, 0.0f, 0.0f}  // Z Mix
 };
 
-static mixer_t quadcopter_h_mixing =
-{
-  {M, M, M, M, NONE, NONE, NONE, NONE}, // output_type
-
-  { 1.0f, 1.0f, 1.0f, 1.0f,  0.0f, 0.0f, 0.0f, 0.0f}, // F Mix
-  {-1057, -943, 1057,  943,  0.0f, 0.0f, 0.0f, 0.0f}, // X Mix
-  {-1005,  995,-1005,  995,  0.0f, 0.0f, 0.0f, 0.0f}, // Y Mix
-  {-1.0f, 1.0f, 1.0f,-1.0f,  0.0f, 0.0f, 0.0f, 0.0f}  // Z Mix
-};
-
 static mixer_t fixedwing_mixing =
 {
   {S, S, M, S, NONE, NONE, NONE, NONE},
@@ -89,16 +79,6 @@ static mixer_t fixedwing_mixing =
   { 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, // X Mix
   { 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, // Y Mix
   { 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f}  // Z Mix
-};
-
-static mixer_t tricopter_mixing =
-{
-  {M, M, M, S, NONE, NONE, NONE, NONE},
-
-  { 1.0f,     1.0f,   1.0f,   0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, // F Mix
-  {-1.0f,     1.0f,   0.0f,   0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, // X Mix
-  {-0.667f,  -0.667f, 1.333f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f}, // Y Mix
-  { 0.0f,     0.0f,   0.0f,   1.0f, 0.0f, 0.0f, 0.0f, 0.0f}  // Z Mix
 };
 
 static mixer_t Y6_mixing =
@@ -119,14 +99,12 @@ static mixer_t X8_mixing =
   { 1.0f,  -1.0f,    1.0f,   -1.0f,    1.0f,   -1.0f,   1.0f, -1.0f}  // Z Mix
 };
 
-static mixer_t* mixer_to_use;
+static mixer_t *mixer_to_use;
 
 static mixer_t *array_of_mixers[NUM_MIXERS] =
 {
   &quadcopter_plus_mixing,
   &quadcopter_x_mixing,
-  &quadcopter_h_mixing,
-  &tricopter_mixing,
   &Y6_mixing,
   &X8_mixing,
   &fixedwing_mixing
@@ -149,7 +127,7 @@ void init_mixing()
     _error_state |= ERROR_INVALID_MIXER;
   }
 
-  mixer_to_use = array_of_mixers[get_param_int(PARAM_MIXER)];
+  mixer_to_use = array_of_mixers[mixer_choice];
 
   for (int8_t i=0; i<8; i++)
   {
@@ -197,7 +175,8 @@ void write_motor(uint8_t index, float value)
     value = 0.0;
   }
   _outputs[index] = value;
-  int32_t pwm_us = value * (get_param_int(PARAM_MOTOR_MAX_PWM) - get_param_int(PARAM_MOTOR_MIN_PWM)) + get_param_int(PARAM_MOTOR_MIN_PWM);
+  int32_t pwm_us = value * (get_param_int(PARAM_MOTOR_MAX_PWM) - get_param_int(PARAM_MOTOR_MIN_PWM))
+                     + get_param_int(PARAM_MOTOR_MIN_PWM);
   pwm_write(index, pwm_us);
 }
 
