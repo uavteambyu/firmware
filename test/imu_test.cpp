@@ -9,24 +9,44 @@ using namespace rosflight_firmware;
 
 TEST(imu_test, calibration_simulation)
 {
+    /*
+     *  Things I don't understand:
+     *  How is IMU calibration triggered?
+     *  Does it happen automatically?
+     *  accel is calibrated by Sensors::update_imu when Sensors::calibrating_acc_flag
+     *  is asserted
+     *
+     *  How do I tell when calibration has happened?
+     *
+     *
+     *
+    */
+
     testBoard board;
     ROSflight rf(board);
 
     // Initialize firmware
     rf.init();
 
+    // Set the calibrating_acc_flag
+    rf.sensors_.start_imu_calibration();
+
     float fake_accel[3] = {1, 1.2, 0.8};
     float dummy_gyro[3] = {0, 0, 0};
 
-    for (int t = 0; t < 100; ++t) {
-        // Feed in fake acceleration data
-        board.set_imu(fake_accel, dummy_gyro, (uint64_t)(t*1e6));
+    // Feed in fake acceleration data, set time to 0
+    board.set_imu(fake_accel, dummy_gyro, (uint64_t)(0));
 
-        // Run the firmware
-        rf.run();
+    uint64_t start_time_us = board.clock_micros();
+    uint64_t run_time_us = 1e5;
 
+    while(board.clock_micros() < start_time_us + run_time_us)
+    {
+      board.set_time(board.clock_micros() + 1000);
+      rf.run();
     }
-    // When does the calibration happen?
+
+    EXPECT_EQ(rf.state_manager_.state().armed, true);
 
     float bias[3];
 
