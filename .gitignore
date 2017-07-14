@@ -26,3 +26,4 @@ param_description.md
 *.synctex.gz
 *.bbl
 *.blg
+.vscode/

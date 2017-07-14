@@ -2,6 +2,7 @@
 #include "rosflight.h"
 #include "test_board.h"
 #include "cmath"
+#include <stdio.h>
 
 #define EXPECT_OPPOSITE(x, y) EXPECT_LE(std::abs(x) - std::abs(y), 0.001)
 
@@ -31,7 +32,7 @@ TEST(imu_test, calibration_simulation)
     // Set the calibrating_acc_flag
     rf.sensors_.start_imu_calibration();
 
-    float fake_accel[3] = {1, 1.2, 0.8};
+    float fake_accel[3] = {1, 0.2, -10};
     float dummy_gyro[3] = {0, 0, 0};
 
     // Feed in fake acceleration data, set time to 0
@@ -39,6 +40,12 @@ TEST(imu_test, calibration_simulation)
 
     uint64_t start_time_us = board.clock_micros();
     uint64_t run_time_us = 1e5;
+
+    for (int i = 0; i < 1500; i++)
+    {
+      board.set_imu(fake_accel, dummy_gyro, (uint64_t)(0));
+      rf.run();
+    }
 
     while(board.clock_micros() < start_time_us + run_time_us)
     {
@@ -58,5 +65,6 @@ TEST(imu_test, calibration_simulation)
     for (int i = 0; i < 3; i++)
     {
       EXPECT_OPPOSITE(fake_accel[i], bias[i]);
+      std::cout << "Axis " << i << " bias: " << bias[i] << std::endl;
     }    
 }
