@@ -52,3 +52,41 @@ TEST(extra_unit_tests, imu_calibration)
     EXPECT_NE(bias[i], 0);
   }
 }
+
+TEST(extra_unit_tests, time_going_backwards)
+{
+  testBoard board;
+  ROSflight rf(board);
+
+  // data to pass into rosflight
+  float accel[3] = {1, 1, -9.8};
+  float gyro[3] = {0, 0, 0};
+  float acc_cal[3] = {0, 0, -9.8};
+
+  // Initialize firmware
+  rf.init();
+
+  // calibrate the imu
+  step_imu(rf, board, acc_cal);
+
+  // call testBoard::set_imu so that the new_imu_ flag will get set
+  board.set_imu(accel, gyro, (uint64_t)(1000));
+  rf.run();
+
+  // call set_imu again with a time before the first call
+  board.set_imu(accel, gyro, (uint64_t)(500));
+  rf.run();
+
+  // when the error occures, the estimator::run() function sets the time_going_backwards error in the state machine
+  // the error condition is picked up by state_manager::run() which then calls process_errors()
+  // process_errors() calls set_event(), and this is where the state transition happens in the FSM
+  // make sure that the error was caught
+  EXPECT_EQ(rf.state_manager_.state().error, true);
+
+  // make time go forwards
+  board.set_imu(accel, gyro, (uint64_t)(1500));
+  rf.run();
+
+  // make sure the error got cleared
+  EXPECT_EQ(rf.state_manager_.state().error, false);
+}

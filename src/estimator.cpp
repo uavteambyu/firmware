@@ -120,12 +120,12 @@ void Estimator::run()
   else if (now_us <= last_time_)
   {
     // this shouldn't happen
-//    RF_.state_manager_.set_error(StateManager::ERROR_TIME_GOING_BACKWARDS);
+    RF_.state_manager_.set_error(StateManager::ERROR_TIME_GOING_BACKWARDS);
     last_time_ = now_us;
     return;
   }
 
-//  RF_.state_manager_.clear_error(StateManager::ERROR_TIME_GOING_BACKWARDS);
+  RF_.state_manager_.clear_error(StateManager::ERROR_TIME_GOING_BACKWARDS);
 
   float dt = (now_us - last_time_) * 1e-6f;
   last_time_ = now_us;
