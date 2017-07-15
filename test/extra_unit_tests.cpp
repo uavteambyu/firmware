@@ -15,7 +15,8 @@ void step_imu(ROSflight& rf, testBoard& board, float acc_data[3])
   rf.sensors_.start_imu_calibration();
 
   // Feed in fake acceleration data, run enough times to trigger calibration
-  for (int i = 0; i < 1001; i++)
+  uint64_t start = board.clock_micros();
+  for (int i = start; i < start + 1001; i++)
   {
     board.set_imu(acc_data, dummy_gyro, (uint64_t)(i));
     rf.run();
@@ -89,4 +90,39 @@ TEST(extra_unit_tests, time_going_backwards)
 
   // make sure the error got cleared
   EXPECT_EQ(rf.state_manager_.state().error, false);
+}
+
+TEST(extra_unit_tests, imu_not_responding)
+{
+  testBoard board;
+  ROSflight rf(board);
+
+  float acc_cal[3] = {0, 0, -9.8};
+  uint64_t millis = 0;
+
+  board.set_time((uint64_t)(5));
+  millis = board.clock_millis();
+
+  // calibrate the imu
+  step_imu(rf, board, acc_cal);
+  millis = board.clock_millis();
+
+  EXPECT_EQ(rf.state_manager_.state().error, false);
+
+  // go 1000ms without imu update
+  uint64_t start = board.clock_micros();
+  uint64_t now = start;
+  //while (now <= start + 1e6)
+  //{
+  //  now++;
+  //  board.set_time(now);
+  //  rf.run();
+  //}
+
+  board.set_time(board.clock_micros() + 1.5e6);
+  millis = board.clock_millis();
+  rf.run();
+
+  // rf never gets out of the FSM_INIT state
+  EXPECT_EQ(rf.state_manager_.state().error, true);
 }
