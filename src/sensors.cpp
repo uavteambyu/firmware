@@ -295,7 +295,6 @@ void Sensors::calibrate_accel(void)
     // Sanity Check -
     // If the accelerometer is upside down or being spun around during the calibration,
     // then don't do anything
-    double norm_vector_sub = norm(vector_sub(max_, min_));
     if (norm(vector_sub(max_, min_)) > 1.0)
     {
 //      mavlink_log_error("Too much movement for IMU cal", NULL);
@@ -303,7 +302,6 @@ void Sensors::calibrate_accel(void)
     }
     else
     {
-      double norm_accel_bias = norm(accel_bias);
       if (norm(accel_bias) < 3.0)
       {
         rf_.params_.set_param_float(PARAM_ACC_X_BIAS, accel_bias.x);
