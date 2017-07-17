@@ -97,32 +97,28 @@ TEST(extra_unit_tests, imu_not_responding)
   testBoard board;
   ROSflight rf(board);
 
-  float acc_cal[3] = {0, 0, -9.8};
-  uint64_t millis = 0;
+  rf.init();
+
+  float acc[3] = {0, 0, -9.8};
+  float gyro[3] = {0, 0, 0};
 
   board.set_time((uint64_t)(5));
-  millis = board.clock_millis();
 
   // calibrate the imu
-  step_imu(rf, board, acc_cal);
-  millis = board.clock_millis();
+  step_imu(rf, board, acc);
 
+  // there should not be any errors at this point
   EXPECT_EQ(rf.state_manager_.state().error, false);
 
-  // go 1000ms without imu update
-  uint64_t start = board.clock_micros();
-  uint64_t now = start;
-  //while (now <= start + 1e6)
-  //{
-  //  now++;
-  //  board.set_time(now);
-  //  rf.run();
-  //}
-
+  // go more than 1000ms without imu update
   board.set_time(board.clock_micros() + 1.5e6);
-  millis = board.clock_millis();
   rf.run();
 
-  // rf never gets out of the FSM_INIT state
+  // rf should be in the error state
   EXPECT_EQ(rf.state_manager_.state().error, true);
+
+  // update the imu and make sure the error gets cleared
+  board.set_imu(acc, gyro, board.clock_micros() + 100);
+  rf.run();
+  EXPECT_EQ(rf.state_manager_.state().error, false);
 }
