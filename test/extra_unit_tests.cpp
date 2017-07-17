@@ -122,3 +122,21 @@ TEST(extra_unit_tests, imu_not_responding)
   rf.run();
   EXPECT_EQ(rf.state_manager_.state().error, false);
 }
+
+TEST(extra_unit_tests, anti_windup)
+{
+  /*  TODO: 
+  *   find motor outputs in codebase
+  *   find where the saturation gets set
+  *   figure out how to send commands
+  *   figure out how to make rf go somewhere autonomously
+  */
+
+  // send a command to go to something really far away
+
+  // make sure that rf does not try to send the motor output above saturation
+
+  // reverse direction
+
+  // make sure that rf turns around in a reasonable amount of time
+}
