@@ -31,6 +31,18 @@ void get_bias(ROSflight rf, testBoard board, float bias[3])
   bias[2] = rf.params_.get_param_float(PARAM_ACC_Z_BIAS);
 }
 
+void step_firmware(ROSflight& rf, testBoard& board, uint32_t us)
+{
+  uint64_t start_time_us = board.clock_micros();
+  float dummy_acc[3] = {0, 0, -9.80665};
+  float dummy_gyro[3] = {0, 0, 0};
+  while(board.clock_micros() < start_time_us + us)
+  {
+    board.set_imu(dummy_acc, dummy_gyro, board.clock_micros() + 1000);
+    rf.run();
+  }
+}
+
 TEST(extra_unit_tests, imu_calibration)
 {
   testBoard board;
@@ -131,6 +143,45 @@ TEST(extra_unit_tests, anti_windup)
   *   figure out how to send commands
   *   figure out how to make rf go somewhere autonomously
   */
+
+  /*
+  * Channel mappings
+  * RC_X_CHN	0
+  * RC_Y_CHN	1
+  * RC_Z_CHN	3
+  * RC_F_CHN	2
+  */
+
+  testBoard board;
+  ROSflight rf(board);
+
+  rf.init();
+
+  control_t rc_command_ =
+  {
+    0,                      // timestamp in ms
+    {false, ANGLE, 0.0},    // x mrads
+    {false, ANGLE, 0.0},    // y mrads
+    {false, RATE, 0.0},     // z mrads/s
+    {false, THROTTLE, 0.0}  // throttle
+  };
+
+  uint16_t rc_values[8];
+  for (int i = 0; i < 8; i++)
+  {
+    rc_values[i] = 1500;
+  }
+  rc_values[2] = 1000;
+
+  // Let's send an arming signal
+  rc_values[0] = 1500;
+  rc_values[1] = 1500;
+  rc_values[2] = 1000;
+  rc_values[3] = 2000;
+  board.set_rc(rc_values);
+
+  // step long enough to arm
+  step_firmware(rf, board, 1200000);
 
   // send a command to go to something really far away
 
