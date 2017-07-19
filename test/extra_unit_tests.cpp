@@ -43,6 +43,16 @@ void step_firmware(ROSflight& rf, testBoard& board, uint32_t us)
   }
 }
 
+void step_time(ROSflight& rf, testBoard board, uint32_t us)
+{
+  uint64_t start = board.clock_micros();
+  for (int i = start; i <= start + us; i++)
+  {
+    board.set_time((uint64_t)(i));
+    rf.run();
+  }
+}
+
 TEST(extra_unit_tests, imu_calibration)
 {
   testBoard board;
@@ -157,14 +167,16 @@ TEST(extra_unit_tests, anti_windup)
 
   rf.init();
 
-  control_t rc_command_ =
-  {
-    0,                      // timestamp in ms
-    {false, ANGLE, 0.0},    // x mrads
-    {false, ANGLE, 0.0},    // y mrads
-    {false, RATE, 0.0},     // z mrads/s
-    {false, THROTTLE, 0.0}  // throttle
-  };
+  board.set_pwm_lost(false);
+
+  //control_t rc_command_ =
+  //{
+  //  0,                      // timestamp in ms
+  //  {false, ANGLE, 0.0},    // x mrads
+  //  {false, ANGLE, 0.0},    // y mrads
+  //  {false, RATE, 0.0},     // z mrads/s
+  //  {false, THROTTLE, 0.0}  // throttle
+  //};
 
   uint16_t rc_values[8];
   for (int i = 0; i < 8; i++)
@@ -172,6 +184,11 @@ TEST(extra_unit_tests, anti_windup)
     rc_values[i] = 1500;
   }
   rc_values[2] = 1000;
+  board.set_rc(rc_values);
+
+  // calibrate the imu
+  float acc[3] = {0, 0, -9.8};
+  step_imu(rf, board, acc);
 
   // Let's send an arming signal
   rc_values[0] = 1500;
@@ -181,9 +198,29 @@ TEST(extra_unit_tests, anti_windup)
   board.set_rc(rc_values);
 
   // step long enough to arm
-  step_firmware(rf, board, 1200000);
+  step_firmware(rf, board, 1.2e6);
 
-  // send a command to go to something really far away
+  // center sticks, throttle down
+  for (int i = 0; i < 4; i++)
+  {
+    rc_values[i] = 1500;
+  }
+  rc_values[2] = 1000;
+  board.set_rc(rc_values);
+
+  // roll a bit to move forward, throttle up
+  rc_values[2] = 1500;
+  rc_values[0] = 1250;
+  board.set_rc(rc_values);
+
+  // run for 10 seconds
+  step_time(rf, board, 5e6);
+  step_time(rf, board, 5e6);
+
+  // level out
+  rc_values[0] = 1500;
+  board.set_rc(rc_values);
+  step_time(rf, board, 1e6);
 
   // make sure that rf does not try to send the motor output above saturation
 
