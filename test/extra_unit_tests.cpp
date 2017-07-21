@@ -164,67 +164,53 @@ TEST(extra_unit_tests, anti_windup)
 
   testBoard board;
   ROSflight rf(board);
+  uint16_t stick_values[8];
 
   rf.init();
 
   board.set_pwm_lost(false);
 
-  //control_t rc_command_ =
-  //{
-  //  0,                      // timestamp in ms
-  //  {false, ANGLE, 0.0},    // x mrads
-  //  {false, ANGLE, 0.0},    // y mrads
-  //  {false, RATE, 0.0},     // z mrads/s
-  //  {false, THROTTLE, 0.0}  // throttle
-  //};
-
-  uint16_t rc_values[8];
-  for (int i = 0; i < 8; i++)
-  {
-    rc_values[i] = 1500;
-  }
-  rc_values[2] = 1000;
-  board.set_rc(rc_values);
+  center_controls(board, stick_values);
 
   // calibrate the imu
   float acc[3] = {0, 0, -9.8};
   step_imu(rf, board, acc);
 
   // Let's send an arming signal
-  rc_values[0] = 1500;
-  rc_values[1] = 1500;
-  rc_values[2] = 1000;
-  rc_values[3] = 2000;
-  board.set_rc(rc_values);
+  stick_values[0] = 1500;
+  stick_values[1] = 1500;
+  stick_values[2] = 1000;
+  stick_values[3] = 2000;
+  board.set_rc(stick_values);
 
   // step long enough to arm
   step_firmware(rf, board, 1.2e6);
 
-  // center sticks, throttle down
-  for (int i = 0; i < 4; i++)
-  {
-    rc_values[i] = 1500;
-  }
-  rc_values[2] = 1000;
-  board.set_rc(rc_values);
+  // center sticks, throttle up
+  center_controls(board, stick_values);
+  step_firmware(rf, board, 1.2e6);
 
   // roll a bit to move forward, throttle up
-  rc_values[2] = 1500;
-  rc_values[0] = 1250;
-  board.set_rc(rc_values);
+  stick_values[2] = 2000;
+  stick_values[1] = 2000;
+  stick_values[0] = 2000;
+  board.set_rc(stick_values);
 
   // run for 10 seconds
   step_time(rf, board, 5e6);
   step_time(rf, board, 5e6);
 
-  // level out
-  rc_values[0] = 1500;
-  board.set_rc(rc_values);
-  step_time(rf, board, 1e6);
-
   // make sure that rf does not try to send the motor output above saturation
+  for (int i = 0; i < 4; i++)
+  {
+    EXPECT_LE(rf.mixer_.get_outputs()[i], 1);
+  }
 
   // reverse direction
+  stick_values[1] = 1000;
+  stick_values[0] = 1000;
+  board.set_rc(stick_values);
+  step_time(rf, board, 5e6);
 
   // make sure that rf turns around in a reasonable amount of time
 }
