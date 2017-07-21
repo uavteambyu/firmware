@@ -228,3 +228,17 @@ TEST(extra_unit_tests, anti_windup)
 
   // make sure that rf turns around in a reasonable amount of time
 }
+
+TEST(extra_unit_tests, baro_calibration)
+{
+  testBoard board;
+  ROSflight rf(board);
+
+  //some default mid-range values
+  float pressure = 900000;
+  float temperat = 21;
+
+  rf.init();
+
+  EXPECT_EQ(rf.sensors_.data().baro_present, false);
+}
