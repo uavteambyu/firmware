@@ -53,6 +53,16 @@ void step_time(ROSflight& rf, testBoard board, uint32_t us)
   }
 }
 
+void center_controls(testBoard& board, uint16_t stick_values[8])
+{
+  for (int i = 0; i < 8; i++)
+  {
+    stick_values[i] = 1500;
+  }
+  stick_values[2] = 1000;
+  board.set_rc(stick_values);
+}
+
 TEST(extra_unit_tests, imu_calibration)
 {
   testBoard board;
