@@ -47,6 +47,9 @@ private:
   float acc_[3] = {0, 0, 0};
   float gyro_[3] = {0, 0, 0};
   bool new_imu_ = false;
+  float diff_pressure_;
+  float temperature_;
+  bool baro_present_;
 
 public:
 // setup
@@ -111,6 +114,8 @@ public:
   void set_rc(uint16_t* values);
   void set_time(uint64_t time_us);
   void set_pwm_lost(bool lost);
+  void set_baro(float diff_pressure, float temperature);
+  void set_baro_present(bool present);
 
 };
 

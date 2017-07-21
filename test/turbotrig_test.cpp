@@ -80,6 +80,19 @@ TEST(turbotrig_test, asin_test) {
   }
 }
 
+TEST(turbotrig_test, fast_alt_test) {
+
+  //out of bounds
+  EXPECT_EQ(fast_alt(69681), 0.0);
+  EXPECT_EQ(fast_alt(106598), 0.0);
+  //pascal to meters
+  
+  //edge cases
+  EXPECT_LE(fast_alt(69682), 2688.2);
+  std::cout << "Min: " << fast_alt(69682) << std::endl;
+  std::cout << "Max: " << fast_alt(106597) << std::endl;
+}
+
 TEST(turbovec_test, vector_test) {
   Eigen::Vector3d eig1;
   eig1 << 1, 2, 3;
@@ -174,5 +187,6 @@ TEST(turbovec_test, quat_from_two_vectors_test){
 
 int main(int argc, char **argv) {
   testing::InitGoogleTest(&argc, argv);
+
   return RUN_ALL_TESTS();
 }

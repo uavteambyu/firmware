@@ -63,6 +63,17 @@ namespace rosflight_firmware
     new_imu_ = true;
   }
 
+  void testBoard::set_baro(float diff_pressure, float temperature)
+  {
+    diff_pressure_ = diff_pressure;
+    temperature_ = temperature;
+  }
+
+  void testBoard::set_baro_present(bool present)
+  {
+    baro_present_ = present;
+  }
+
 
 // setup
   void testBoard::init_board(void){}
@@ -111,8 +122,11 @@ namespace rosflight_firmware
   bool testBoard::mag_check(void){ return false; }
   void testBoard::mag_read(float mag[3]){}
 
-  bool testBoard::baro_check(void){ return false; }
-  void testBoard::baro_read(float *pressure, float *temperature) {}
+  bool testBoard::baro_check(void){ return baro_present_; }
+  void testBoard::baro_read(float *pressure, float *temperature) {
+    *pressure = diff_pressure_;
+    *temperature = temperature_;
+  }
 
   bool testBoard::diff_pressure_check(void){ return false; }
   void testBoard::diff_pressure_read(float *diff_pressure, float *temperature) {}
