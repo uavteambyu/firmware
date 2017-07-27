@@ -65,6 +65,19 @@ void center_controls(testBoard& board, uint16_t stick_values[8])
   board.set_rc(stick_values);
 }
 
+void err_free_rf_init(ROSflight& rf, testBoard& board)
+{
+  rf.init();
+  rf.params_.set_param_int(PARAM_MIXER, 1); //std x quad
+  rf.state_manager_.clear_error(ROSFLIGHT_ERROR_INVALID_MIXER);
+  //just need a non-zero on one of these params to prevent uncalibrated imu error
+  rf.params_.set_param_float(PARAM_ACC_X_BIAS, 0.1f);
+  rf.state_manager_.clear_error(ROSFLIGHT_ERROR_UNCALIBRATED_IMU);
+  board.set_pwm_lost(false);
+  uint16_t rc_values[8] = {1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000};
+  board.set_rc(rc_values);
+}
+
 TEST(extra_unit_tests, imu_calibration)
 {
   testBoard board;
@@ -253,11 +266,54 @@ TEST(extra_unit_tests, baro_calibration)
   testBoard board;
   ROSflight rf(board);
 
-  //some default mid-range values
-  float pressure = 900000;
-  float temperat = 21;
+  err_free_rf_init(rf, board);
 
-  rf.init();
-
+  //check correct initialization
   EXPECT_EQ(rf.sensors_.data().baro_present, false);
+  EXPECT_EQ(rf.state_manager_.state().armed, false);
+  EXPECT_EQ(rf.state_manager_.state().error, false);
+  EXPECT_FLOAT_EQ(rf.params_.get_param_float(PARAM_BARO_BIAS), 0.0f);
+
+  //make sure it still isn't present after rosflight
+  //runs through a few of loops
+  step_f(rf, board, 2.6e6f);
+  EXPECT_EQ(rf.sensors_.data().baro_present, false);
+  EXPECT_EQ(rf.state_manager_.state().armed, false);
+  EXPECT_EQ(rf.state_manager_.state().error, false);
+  EXPECT_FLOAT_EQ(rf.params_.get_param_float(PARAM_BARO_BIAS), 0.0f);
+
+  //Calibration test setup:
+  //1387.0f = default ground level param (meters)
+  //with this, pressure should be around 85729 pa
+  float alt = rf.params_.get_param_float(PARAM_GROUND_LEVEL);
+  float gnd_press = 101325.0f*(float)pow((1-2.25694e-5 * alt), 5.2553);
+
+  //Calibration check1 (init cal):
+  float baro_pressure = 101325;
+  board.set_baro_present(true);
+  board.set_baro(baro_pressure, 21);//sea-level @ (a balmy)68F
+  float true_baro_bias = baro_pressure - gnd_press;
+
+  step_time(rf, board, 0.9e6);
+
+  EXPECT_EQ(rf.board_.baro_check(), true);
+  EXPECT_EQ(rf.state_manager_.state().armed, false);
+  EXPECT_EQ(rf.state_manager_.state().error, false);
+  EXPECT_EQ(rf.sensors_.data().baro_present, true);
+  EXPECT_FLOAT_EQ(rf.params_.get_param_float(PARAM_BARO_BIAS), true_baro_bias);
+
+  //need to update the imu to prevent an error:
+  step_f(rf, board, 0.1e6);
+
+  //Calibration check2 (confirm calling calibrate function works):
+  rf.sensors_.start_baro_calibration();
+  //calling this function should reset bias value
+  EXPECT_FLOAT_EQ(rf.params_.get_param_float(PARAM_BARO_BIAS), 0.0f);
+
+  step_time(rf, board, 0.9e6);
+  EXPECT_EQ(rf.board_.baro_check(), true);
+  EXPECT_EQ(rf.state_manager_.state().armed, false);
+  EXPECT_EQ(rf.state_manager_.state().error, false);
+  EXPECT_EQ(rf.sensors_.data().baro_present, true);
+  EXPECT_FLOAT_EQ(rf.params_.get_param_float(PARAM_BARO_BIAS), true_baro_bias);
 }
