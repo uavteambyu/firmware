@@ -4,6 +4,8 @@
 #include "cmath"
 #include <stdio.h>
 
+#define EXPECT_PRETTYCLOSE(x, y) EXPECT_LE(std::abs(x - y), 0.01)
+
 using namespace rosflight_firmware;
 
 // move time forward while feeding acceleration data to the board
@@ -31,7 +33,7 @@ void get_bias(ROSflight rf, testBoard board, float bias[3])
   bias[2] = rf.params_.get_param_float(PARAM_ACC_Z_BIAS);
 }
 
-void step_firmware(ROSflight& rf, testBoard& board, uint32_t us)
+void step_f(ROSflight& rf, testBoard& board, uint32_t us)
 {
   uint64_t start_time_us = board.clock_micros();
   float dummy_acc[3] = {0, 0, -9.80665};
@@ -102,12 +104,15 @@ TEST(extra_unit_tests, time_going_backwards)
   // calibrate the imu
   step_imu(rf, board, acc_cal);
 
+  // clear errors
+  rf.state_manager_.clear_error(rf.state_manager_.state().error_codes);
+
   // call testBoard::set_imu so that the new_imu_ flag will get set
-  board.set_imu(accel, gyro, (uint64_t)(1000));
+  board.set_imu(accel, gyro, (uint64_t)(board.clock_micros() + 100));
   rf.run();
 
   // call set_imu again with a time before the first call
-  board.set_imu(accel, gyro, (uint64_t)(500));
+  board.set_imu(accel, gyro, (uint64_t)(board.clock_micros() - 500));
   rf.run();
 
   // when the error occures, the estimator::run() function sets the time_going_backwards error in the state machine
@@ -117,7 +122,7 @@ TEST(extra_unit_tests, time_going_backwards)
   EXPECT_EQ(rf.state_manager_.state().error, true);
 
   // make time go forwards
-  board.set_imu(accel, gyro, (uint64_t)(1500));
+  board.set_imu(accel, gyro, (uint64_t)(board.clock_micros() + 1000));
   rf.run();
 
   // make sure the error got cleared
@@ -134,13 +139,8 @@ TEST(extra_unit_tests, imu_not_responding)
   float acc[3] = {0, 0, -9.8};
   float gyro[3] = {0, 0, 0};
 
-  board.set_time((uint64_t)(5));
-
-  // calibrate the imu
-  step_imu(rf, board, acc);
-
-  // there should not be any errors at this point
-  EXPECT_EQ(rf.state_manager_.state().error, false);
+  // clear errors
+  rf.state_manager_.clear_error(rf.state_manager_.state().error_codes);
 
   // go more than 1000ms without imu update
   board.set_time(board.clock_micros() + 1.5e6);
@@ -180,11 +180,18 @@ TEST(extra_unit_tests, anti_windup)
 
   board.set_pwm_lost(false);
 
+  float max_roll = rf.params_.get_param_float(PARAM_RC_MAX_ROLL);
+  float max_pitch = rf.params_.get_param_float(PARAM_RC_MAX_PITCH);
+  float max_yawrate = rf.params_.get_param_float(PARAM_RC_MAX_YAWRATE);
+
   center_controls(board, stick_values);
 
   // calibrate the imu
   float acc[3] = {0, 0, -9.8};
   step_imu(rf, board, acc);
+
+  // clear errors
+  rf.state_manager_.clear_error(rf.state_manager_.state().error_codes);
 
   // Let's send an arming signal
   stick_values[0] = 1500;
@@ -194,21 +201,36 @@ TEST(extra_unit_tests, anti_windup)
   board.set_rc(stick_values);
 
   // step long enough to arm
-  step_firmware(rf, board, 1.2e6);
+  step_f(rf, board, 1.2e6);
 
-  // center sticks, throttle up
-  center_controls(board, stick_values);
-  step_firmware(rf, board, 1.2e6);
+  // check that we are armed
+  EXPECT_EQ(rf.state_manager_.state().armed, true);
+  EXPECT_EQ(rf.state_manager_.state().error, false);
+  EXPECT_EQ(rf.state_manager_.state().failsafe, false);
+
+  // Set a command on the sticks
+  stick_values[0] = 1750;
+  stick_values[1] = 1250;
+  stick_values[2] = 1900;
+  stick_values[3] = 1100;
+  board.set_rc(stick_values);
+  step_f(rf, board, 20000);
+
+  // Check the output - This should be our rc control
+  control_t output = rf.command_manager_.combined_control();
+  EXPECT_PRETTYCLOSE(output.x.value, 0.5*max_roll);
+  EXPECT_PRETTYCLOSE(output.y.value, -0.5*max_pitch);
+  EXPECT_PRETTYCLOSE(output.z.value, -0.8*max_yawrate);
+  EXPECT_PRETTYCLOSE(output.F.value, 0.9);
 
   // roll a bit to move forward, throttle up
-  stick_values[2] = 2000;
-  stick_values[1] = 2000;
-  stick_values[0] = 2000;
+  stick_values[2] = 1900;
+  stick_values[1] = 1900;
+  stick_values[0] = 1900;
   board.set_rc(stick_values);
 
   // run for 10 seconds
-  step_time(rf, board, 5e6);
-  step_time(rf, board, 5e6);
+  step_f(rf, board, 10e6);
 
   // make sure that rf does not try to send the motor output above saturation
   for (int i = 0; i < 4; i++)
@@ -217,8 +239,10 @@ TEST(extra_unit_tests, anti_windup)
   }
 
   // reverse direction
-  stick_values[1] = 1000;
-  stick_values[0] = 1000;
+  stick_values[3] = 1900;
+  stick_values[2] = 1100;
+  stick_values[1] = 1100;
+  stick_values[0] = 1100;
   board.set_rc(stick_values);
   step_time(rf, board, 5e6);
 

@@ -34,8 +34,8 @@ add_executable(unit_tests
         test_board.cpp
         turbotrig_test.cpp
         #state_machine_test.cpp
-        #command_manager_test.cpp
-        estimator_test.cpp
+        command_manager_test.cpp
+        #estimator_test.cpp
         extra_unit_tests.cpp
         )
 target_link_libraries(unit_tests ${GTEST_LIBRARIES} pthread)
