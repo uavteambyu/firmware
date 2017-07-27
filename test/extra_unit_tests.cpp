@@ -33,6 +33,7 @@ void get_bias(ROSflight rf, testBoard board, float bias[3])
   bias[2] = rf.params_.get_param_float(PARAM_ACC_Z_BIAS);
 }
 
+// move time forward while updating IMU
 void step_f(ROSflight& rf, testBoard& board, uint32_t us)
 {
   uint64_t start_time_us = board.clock_micros();
@@ -45,6 +46,7 @@ void step_f(ROSflight& rf, testBoard& board, uint32_t us)
   }
 }
 
+// move time forward without updating IMU
 void step_time(ROSflight& rf, testBoard board, uint32_t us)
 {
   uint64_t start = board.clock_micros();
@@ -111,13 +113,9 @@ TEST(extra_unit_tests, time_going_backwards)
   float gyro[3] = {0, 0, 0};
   float acc_cal[3] = {0, 0, -9.8};
 
-  // Initialize firmware
+  // Initialize firmware, calibrate IMU, clear errors
   rf.init();
-
-  // calibrate the imu
   step_imu(rf, board, acc_cal);
-
-  // clear errors
   rf.state_manager_.clear_error(rf.state_manager_.state().error_codes);
 
   // call testBoard::set_imu so that the new_imu_ flag will get set
@@ -128,9 +126,6 @@ TEST(extra_unit_tests, time_going_backwards)
   board.set_imu(accel, gyro, (uint64_t)(board.clock_micros() - 500));
   rf.run();
 
-  // when the error occures, the estimator::run() function sets the time_going_backwards error in the state machine
-  // the error condition is picked up by state_manager::run() which then calls process_errors()
-  // process_errors() calls set_event(), and this is where the state transition happens in the FSM
   // make sure that the error was caught
   EXPECT_EQ(rf.state_manager_.state().error, true);
 
@@ -147,13 +142,10 @@ TEST(extra_unit_tests, imu_not_responding)
   testBoard board;
   ROSflight rf(board);
 
-  rf.init();
-
+  err_free_rf_init(rf, board);
+  
   float acc[3] = {0, 0, -9.8};
   float gyro[3] = {0, 0, 0};
-
-  // clear errors
-  rf.state_manager_.clear_error(rf.state_manager_.state().error_codes);
 
   // go more than 1000ms without imu update
   board.set_time(board.clock_micros() + 1.5e6);
@@ -170,15 +162,8 @@ TEST(extra_unit_tests, imu_not_responding)
 
 TEST(extra_unit_tests, anti_windup)
 {
-  /*  TODO: 
-  *   find motor outputs in codebase
-  *   find where the saturation gets set
-  *   figure out how to send commands
-  *   figure out how to make rf go somewhere autonomously
-  */
-
   /*
-  * Channel mappings
+  * Default Channel mappings
   * RC_X_CHN	0
   * RC_Y_CHN	1
   * RC_Z_CHN	3
@@ -189,20 +174,13 @@ TEST(extra_unit_tests, anti_windup)
   ROSflight rf(board);
   uint16_t stick_values[8];
 
-  rf.init();
+  err_free_rf_init(rf, board);
 
   float max_roll = rf.params_.get_param_float(PARAM_RC_MAX_ROLL);
   float max_pitch = rf.params_.get_param_float(PARAM_RC_MAX_PITCH);
   float max_yawrate = rf.params_.get_param_float(PARAM_RC_MAX_YAWRATE);
 
   center_controls(board, stick_values);
-
-  // calibrate the imu
-  float acc[3] = {0, 0, -9.8};
-  step_imu(rf, board, acc);
-
-  // clear errors
-  rf.state_manager_.clear_error(rf.state_manager_.state().error_codes);
 
   // send an arming signal
   stick_values[0] = 1500;
