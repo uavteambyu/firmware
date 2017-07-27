@@ -244,9 +244,16 @@ TEST(extra_unit_tests, anti_windup)
   stick_values[1] = 1100;
   stick_values[0] = 1100;
   board.set_rc(stick_values);
-  step_time(rf, board, 5e6);
+
+  // 20 ms is long enough for 1 update of the rc controls
+  step_f(rf, board, 20e3);
 
   // make sure that rf turns around in a reasonable amount of time
+  output = rf.command_manager_.combined_control();
+  EXPECT_PRETTYCLOSE(output.x.value, -0.8*max_roll);
+  EXPECT_PRETTYCLOSE(output.y.value, -0.8*max_pitch);
+  EXPECT_PRETTYCLOSE(output.z.value, 0.8*max_yawrate);
+  EXPECT_PRETTYCLOSE(output.F.value, 0.1);
 }
 
 TEST(extra_unit_tests, baro_calibration)

@@ -30,12 +30,12 @@ set(ROSFLIGHT_SRC
 
 add_executable(unit_tests
         ${ROSFLIGHT_SRC}
-        #command_manager_test.cpp
+        command_manager_test.cpp
         test_board.cpp
         turbotrig_test.cpp
-        #state_machine_test.cpp
+        state_machine_test.cpp
         command_manager_test.cpp
-        #estimator_test.cpp
+        estimator_test.cpp
         extra_unit_tests.cpp
         )
 target_link_libraries(unit_tests ${GTEST_LIBRARIES} pthread)
