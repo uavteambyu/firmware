@@ -178,8 +178,6 @@ TEST(extra_unit_tests, anti_windup)
 
   rf.init();
 
-  board.set_pwm_lost(false);
-
   float max_roll = rf.params_.get_param_float(PARAM_RC_MAX_ROLL);
   float max_pitch = rf.params_.get_param_float(PARAM_RC_MAX_PITCH);
   float max_yawrate = rf.params_.get_param_float(PARAM_RC_MAX_YAWRATE);
@@ -193,7 +191,7 @@ TEST(extra_unit_tests, anti_windup)
   // clear errors
   rf.state_manager_.clear_error(rf.state_manager_.state().error_codes);
 
-  // Let's send an arming signal
+  // send an arming signal
   stick_values[0] = 1500;
   stick_values[1] = 1500;
   stick_values[2] = 1000;
@@ -208,28 +206,22 @@ TEST(extra_unit_tests, anti_windup)
   EXPECT_EQ(rf.state_manager_.state().error, false);
   EXPECT_EQ(rf.state_manager_.state().failsafe, false);
 
-  // Set a command on the sticks
-  stick_values[0] = 1750;
-  stick_values[1] = 1250;
+  // roll a bit to move forward, throttle up
+  stick_values[0] = 1900;
+  stick_values[1] = 1900;
   stick_values[2] = 1900;
   stick_values[3] = 1100;
   board.set_rc(stick_values);
   step_f(rf, board, 20000);
 
-  // Check the output - This should be our rc control
+  // Check that the rc commands made it to the outputs
   control_t output = rf.command_manager_.combined_control();
-  EXPECT_PRETTYCLOSE(output.x.value, 0.5*max_roll);
-  EXPECT_PRETTYCLOSE(output.y.value, -0.5*max_pitch);
+  EXPECT_PRETTYCLOSE(output.x.value, 0.8*max_roll);
+  EXPECT_PRETTYCLOSE(output.y.value, 0.8*max_pitch);
   EXPECT_PRETTYCLOSE(output.z.value, -0.8*max_yawrate);
   EXPECT_PRETTYCLOSE(output.F.value, 0.9);
 
-  // roll a bit to move forward, throttle up
-  stick_values[2] = 1900;
-  stick_values[1] = 1900;
-  stick_values[0] = 1900;
-  board.set_rc(stick_values);
-
-  // run for 10 seconds
+  // run for 10 seconds to give the PID plenty of time to wind up
   step_f(rf, board, 10e6);
 
   // make sure that rf does not try to send the motor output above saturation
@@ -245,7 +237,7 @@ TEST(extra_unit_tests, anti_windup)
   stick_values[0] = 1100;
   board.set_rc(stick_values);
 
-  // 20 ms is long enough for 1 update of the rc controls
+  // run long enough for 1 update of the rc controls to happen (20 ms)
   step_f(rf, board, 20e3);
 
   // make sure that rf turns around in a reasonable amount of time
