@@ -239,6 +239,76 @@ TEST(extra_unit_tests, anti_windup)
   EXPECT_PRETTYCLOSE(output.F.value, 0.1);
 }
 
+TEST(extra_unit_tests, equilibrium_torque)
+{
+  testBoard board;
+  ROSflight rf(board);
+  uint16_t stick_values[8];
+
+  float max_roll = rf.params_.get_param_float(PARAM_RC_MAX_ROLL);
+  float max_pitch = rf.params_.get_param_float(PARAM_RC_MAX_PITCH);
+  float max_yawrate = rf.params_.get_param_float(PARAM_RC_MAX_YAWRATE);
+  float X_EQ_TORQUE = rf.params_.get_param_float(PARAM_X_EQ_TORQUE);
+  float Y_EQ_TORQUE = rf.params_.get_param_float(PARAM_Y_EQ_TORQUE);
+  float Z_EQ_TORQUE = rf.params_.get_param_float(PARAM_Z_EQ_TORQUE);
+
+  err_free_rf_init(rf, board);
+
+  // check that we are not armed, and that equilibrium_torque offsets have not been set
+  EXPECT_EQ(rf.state_manager_.state().armed, false);
+  EXPECT_EQ(rf.state_manager_.state().error, false);
+  EXPECT_EQ(rf.state_manager_.state().failsafe, false);
+  EXPECT_EQ(rf.params_.get_param_float(PARAM_X_EQ_TORQUE), 0);
+  EXPECT_EQ(rf.params_.get_param_float(PARAM_Y_EQ_TORQUE), 0);
+  EXPECT_EQ(rf.params_.get_param_float(PARAM_Z_EQ_TORQUE), 0);
+  
+  // send an rc command with offset
+  stick_values[3] = 1600;
+  stick_values[2] = 1200;
+  stick_values[1] = 1400;
+  stick_values[0] = 1400;
+  board.set_rc(stick_values);
+  step_f(rf, board, 20e3);
+
+  // tell rf to calibrate
+  rf.controller_.calculate_equilbrium_torque_from_rc();
+  X_EQ_TORQUE = rf.params_.get_param_float(PARAM_X_EQ_TORQUE);
+  Y_EQ_TORQUE = rf.params_.get_param_float(PARAM_Y_EQ_TORQUE);
+  Z_EQ_TORQUE = rf.params_.get_param_float(PARAM_Z_EQ_TORQUE);
+  //step_f(rf, board, 20e3);
+
+  // send an arming signal
+  stick_values[0] = 1500;
+  stick_values[1] = 1500;
+  stick_values[2] = 1000;
+  stick_values[3] = 2000;
+  board.set_rc(stick_values);
+
+  // step long enough to arm
+  step_f(rf, board, 1.2e6);
+  
+  // center stick_values
+  center_controls(board, stick_values);
+  stick_values[2] = 1200;
+  board.set_rc(stick_values);
+  step_f(rf, board, 20e3);
+
+  X_EQ_TORQUE = rf.params_.get_param_float(PARAM_X_EQ_TORQUE);
+  Y_EQ_TORQUE = rf.params_.get_param_float(PARAM_Y_EQ_TORQUE);
+  Z_EQ_TORQUE = rf.params_.get_param_float(PARAM_Z_EQ_TORQUE);
+
+  // check that the motor outputs have some offset
+  control_t output = rf.command_manager_.combined_control();
+  EXPECT_PRETTYCLOSE(output.x.value, -0.2*max_roll);
+  EXPECT_PRETTYCLOSE(output.y.value, -0.2*max_pitch);
+  EXPECT_PRETTYCLOSE(output.z.value, 0.2*max_yawrate);
+  
+  // make sure that the eq_torque parameters got stored
+  EXPECT_NE(rf.params_.get_param_float(PARAM_X_EQ_TORQUE), 0);
+  EXPECT_NE(rf.params_.get_param_float(PARAM_Y_EQ_TORQUE), 0);
+  EXPECT_NE(rf.params_.get_param_float(PARAM_Z_EQ_TORQUE), 0);
+}
+
 TEST(extra_unit_tests, baro_calibration)
 {
   testBoard board;
