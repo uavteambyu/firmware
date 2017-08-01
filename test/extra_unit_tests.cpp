@@ -248,9 +248,9 @@ TEST(extra_unit_tests, equilibrium_torque)
   float max_roll = rf.params_.get_param_float(PARAM_RC_MAX_ROLL);
   float max_pitch = rf.params_.get_param_float(PARAM_RC_MAX_PITCH);
   float max_yawrate = rf.params_.get_param_float(PARAM_RC_MAX_YAWRATE);
-  float X_EQ_TORQUE = rf.params_.get_param_float(PARAM_X_EQ_TORQUE);
-  float Y_EQ_TORQUE = rf.params_.get_param_float(PARAM_Y_EQ_TORQUE);
-  float Z_EQ_TORQUE = rf.params_.get_param_float(PARAM_Z_EQ_TORQUE);
+  float X_EQ_TORQUE = 0;
+  float Y_EQ_TORQUE = 0;
+  float Z_EQ_TORQUE = 0;
 
   err_free_rf_init(rf, board);
 
@@ -270,12 +270,11 @@ TEST(extra_unit_tests, equilibrium_torque)
   board.set_rc(stick_values);
   step_f(rf, board, 20e3);
 
-  // tell rf to calibrate
+  // tell rf to calibratem, get calibration offsets
   rf.controller_.calculate_equilbrium_torque_from_rc();
   X_EQ_TORQUE = rf.params_.get_param_float(PARAM_X_EQ_TORQUE);
   Y_EQ_TORQUE = rf.params_.get_param_float(PARAM_Y_EQ_TORQUE);
   Z_EQ_TORQUE = rf.params_.get_param_float(PARAM_Z_EQ_TORQUE);
-  //step_f(rf, board, 20e3);
 
   // send an arming signal
   stick_values[0] = 1500;
@@ -293,16 +292,12 @@ TEST(extra_unit_tests, equilibrium_torque)
   board.set_rc(stick_values);
   step_f(rf, board, 20e3);
 
-  X_EQ_TORQUE = rf.params_.get_param_float(PARAM_X_EQ_TORQUE);
-  Y_EQ_TORQUE = rf.params_.get_param_float(PARAM_Y_EQ_TORQUE);
-  Z_EQ_TORQUE = rf.params_.get_param_float(PARAM_Z_EQ_TORQUE);
-
   // check that the motor outputs have some offset
-  control_t output = rf.command_manager_.combined_control();
-  EXPECT_PRETTYCLOSE(output.x.value, -0.2*max_roll);
-  EXPECT_PRETTYCLOSE(output.y.value, -0.2*max_pitch);
-  EXPECT_PRETTYCLOSE(output.z.value, 0.2*max_yawrate);
-  
+  Controller::Output output = rf.controller_.output();
+  EXPECT_PRETTYCLOSE(output.x, X_EQ_TORQUE);
+  EXPECT_PRETTYCLOSE(output.y, Y_EQ_TORQUE);
+  EXPECT_PRETTYCLOSE(output.z, Z_EQ_TORQUE);
+
   // make sure that the eq_torque parameters got stored
   EXPECT_NE(rf.params_.get_param_float(PARAM_X_EQ_TORQUE), 0);
   EXPECT_NE(rf.params_.get_param_float(PARAM_Y_EQ_TORQUE), 0);
