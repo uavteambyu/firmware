@@ -148,7 +148,7 @@ bool Naze32::imu_read(float accel[3], float* temperature, float gyro[3], uint64_
     gyro[1] = -gyro_raw[1] * _gyro_scale;
     gyro[2] = -gyro_raw[2] * _gyro_scale;
 
-    (*temperature) = (float)raw_temp/340.0f + 36.53f;
+    (*temperature) = static_cast<float>(raw_temp)/340.0f + 36.53f;
 
     if (accel[0] == 0 && accel[1] == 0 && accel[2] == 0)
     {
@@ -172,9 +172,9 @@ void Naze32::mag_read(float mag[3])
 //  hmc5883l_update();
   hmc5883l_request_async_update();
   hmc5883l_async_read(raw_mag);
-  mag[0] = (float)raw_mag[0];
-  mag[1] = (float)raw_mag[1];
-  mag[2] = (float)raw_mag[2];
+  mag[0] = static_cast<float>(raw_mag[0]);
+  mag[1] = static_cast<float>(raw_mag[1]);
+  mag[2] = static_cast<float>(raw_mag[2]);
 }
 
 bool Naze32::mag_check(void)

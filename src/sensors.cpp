@@ -64,7 +64,7 @@ void Sensors::init()
   next_sensor_to_update_ = 0;
 
   float alt = rf_.params_.get_param_float(PARAM_GROUND_LEVEL);
-  ground_pressure_ = 101325.0f*(float)pow((1-2.25694e-5 * alt), 5.2553);
+  ground_pressure_ = 101325.0f*static_cast<float>(pow((1-2.25694e-5 * alt), 5.2553));
 }
 
 
@@ -122,6 +122,8 @@ void Sensors::update_other_sensors()
       data_.mag.z = mag[2];
       correct_mag();
     }
+    break;
+  default:
     break;
   }
   next_sensor_to_update_ = (next_sensor_to_update_ + 1) % 4;
@@ -267,7 +269,7 @@ void Sensors::calibrate_gyro()
   if (gyro_calibration_count_ > 1000)
   {
     // Gyros are simple.  Just find the average during the calibration
-    vector_t gyro_bias = scalar_multiply(1.0/(float)gyro_calibration_count_, gyro_sum_);
+    vector_t gyro_bias = scalar_multiply(1.0/static_cast<float>(gyro_calibration_count_), gyro_sum_);
 
     if (norm(gyro_bias) < 1.0)
     {
@@ -341,7 +343,7 @@ void Sensors::calibrate_accel(void)
     // Which is why this line is so confusing. What we are doing, is first removing
     // the contribution of temperature to the measurements during the calibration,
     // Then we are dividing by the number of measurements.
-    vector_t accel_bias = scalar_multiply(1.0/(float)accel_calibration_count_, vector_sub(acc_sum_,
+    vector_t accel_bias = scalar_multiply(1.0/static_cast<float>(accel_calibration_count_), vector_sub(acc_sum_,
                                           scalar_multiply(acc_temp_sum_, accel_temp_bias)));
 
     // Sanity Check -
@@ -373,7 +375,8 @@ void Sensors::calibrate_accel(void)
         // This usually means the user has the FCU in the wrong orientation, or something is wrong
         // with the board IMU (like it's a cheap chinese clone)
         rf_.mavlink_.log(Mavlink::LOG_ERROR, "large accel bias: norm = %d.%d",
-                         (uint32_t)norm(accel_bias), (uint32_t)(norm(accel_bias)*1000)%1000);
+                         static_cast<uint32_t>(norm(accel_bias)),
+                         static_cast<uint32_t>((norm(accel_bias)*1000))%1000);
       }
     }
 

@@ -188,9 +188,10 @@ GIT_VARS := -DGIT_VERSION_HASH=0x$(GIT_VERSION_HASH) -DGIT_VERSION_STRING=\"$(GI
 #################################
 COMPILE_FLAGS+=-ffunction-sections -fdata-sections -fno-exceptions
 MCFLAGS=-mcpu=cortex-m3 -mthumb
+COMMON_FLAGS=-Wall -Wextra  -Wstrict-aliasing -pedantic -fmax-errors=5 -Werror -Wunreachable-code -Wdisabled-optimization -Wformat=2 -Winit-self -Wlogical-op -Wmissing-include-dirs -Wredundant-decls -Wshadow -Wundef -Wno-unused -Wno-variadic-macros -Wno-parentheses -fdiagnostics-show-option
 DEFS=-DTARGET_STM32F10X_MD -D__CORTEX_M4 -D__FPU_PRESENT -DWORDS_STACK_SIZE=200 -DSTM32F10X_MD -DUSE_STDPERIPH_DRIVER $(GIT_VARS)
-CFLAGS=-c $(MCFLAGS) $(DEFS) $(OPTIMIZE) $(DEBUG_FLAGS) $(COMPILE_FLAGS) $(addprefix -I,$(INCLUDE_DIRS)) -std=c99
-CXXFLAGS=-c $(MCFLAGS) $(DEFS) $(OPTIMIZE) $(DEBUG_FLAGS) $(COMPILE_FLAGS) $(addprefix -I,$(INCLUDE_DIRS)) -std=c++11 -U__STRICT_ANSI__ -fno-rtti
+CFLAGS=-c $(COMMON_FLAGS) $(MCFLAGS) $(DEFS) $(OPTIMIZE) $(DEBUG_FLAGS) $(COMPILE_FLAGS) $(addprefix -I,$(INCLUDE_DIRS)) -std=c99
+CXXFLAGS=-c $(COMMON_FLAGS) $(MCFLAGS) $(DEFS) $(OPTIMIZE) $(DEBUG_FLAGS) $(COMPILE_FLAGS) $(addprefix -I,$(INCLUDE_DIRS)) -std=c++11 -U__STRICT_ANSI__ -fno-rtti -Wctor-dtor-privacy -Wnoexcept -Woverloaded-virtual -Wsign-promo -Wstrict-null-sentinel -Wswitch-default -Wstrict-overflow=5 -Wcast-qual -Wcast-align
 LDFLAGS =-T $(LDSCRIPT) $(MCFLAGS) -lm -lc --specs=nano.specs --specs=rdimon.specs $(ARCH_FLAGS)  $(LTO_FLAGS)  $(DEBUG_FLAGS) -static  -Wl,-gc-sections
 
 #################################

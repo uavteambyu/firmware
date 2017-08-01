@@ -171,7 +171,11 @@ void tfp_format(void *putp, putcf putf, const char *fmt, va_list va)
       }
       if (ch>='0' && ch<='9')
       {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wold-style-cast"
+#pragma GCC diagnostic ignored "-Wcast-qual"
         ch=a2i(ch, (char **)&fmt, 10, &w);
+#pragma GCC diagnostic pop
       }
 #ifdef 	PRINTF_LONG_SUPPORT
       if (ch=='l')
@@ -191,7 +195,7 @@ void tfp_format(void *putp, putcf putf, const char *fmt, va_list va)
             uli2a(va_arg(va, unsigned long int),10,0,bf);
           else
 #endif
-            ui2a(va_arg(va, unsigned int),10,0,bf);
+          ui2a(va_arg(va, unsigned int),10,0,bf);
           putchw(putp,putf,w,lz,bf);
           break;
         }
@@ -202,7 +206,7 @@ void tfp_format(void *putp, putcf putf, const char *fmt, va_list va)
             li2a(va_arg(va, unsigned long int),bf);
           else
 #endif
-            i2a(va_arg(va, int),bf);
+          i2a(va_arg(va, int),bf);
           putchw(putp,putf,w,lz,bf);
           break;
         }
@@ -213,7 +217,7 @@ void tfp_format(void *putp, putcf putf, const char *fmt, va_list va)
           uli2a(va_arg(va, unsigned long int),16,(ch=='X'),bf);
         else
 #endif
-          ui2a(va_arg(va, unsigned int),16,(ch=='X'),bf);
+        ui2a(va_arg(va, unsigned int),16,(ch=='X'),bf);
         putchw(putp,putf,w,lz,bf);
         break;
       case 'c' :

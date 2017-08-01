@@ -64,7 +64,10 @@ void Params::init_param_int(uint16_t id, const char name[PARAMS_NAME_LENGTH], in
 void Params::init_param_float(uint16_t id, const char name[PARAMS_NAME_LENGTH], float value)
 {
   memcpy(params.names[id], name, PARAMS_NAME_LENGTH);
-  params.values[id] = *((int32_t *) &value);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstrict-aliasing"
+  params.values[id] = *(reinterpret_cast<int32_t *>(&value));
+#pragma GCC diagnostic pop
   params.types[id] = PARAM_TYPE_FLOAT;
 }
 
@@ -72,13 +75,16 @@ uint8_t Params::compute_checksum(void)
 {
   uint8_t chk = 0;
   const uint8_t *p;
-
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstrict-aliasing"
+#pragma GCC diagnostic ignored "-Wold-style-cast"
   for (p = (const uint8_t *)&params.values; p < ((const uint8_t *)&params.values + 4*PARAMS_COUNT); p++)
     chk ^= *p;
   for (p = (const uint8_t *)&params.names; p < ((const uint8_t *)&params.names + PARAMS_COUNT*PARAMS_NAME_LENGTH); p++)
     chk ^= *p;
   for (p = (const uint8_t *)&params.types; p < ((const uint8_t *)&params.types + PARAMS_COUNT); p++)
     chk ^= *p;
+#pragma GCC diagnostic pop
 
   return chk;
 }
@@ -313,7 +319,7 @@ uint16_t Params::lookup_param_id(const char name[PARAMS_NAME_LENGTH])
     }
 
     if (match)
-      return (uint16_t) id;
+      return id;
   }
 
   return PARAMS_COUNT;
@@ -333,7 +339,10 @@ bool Params::set_param_int(uint16_t id, int32_t value)
 
 bool Params::set_param_float(uint16_t id, float value)
 {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wold-style-cast"
   return set_param_int(id, *(int32_t *) &value);
+#pragma GCC diagnostic pop
 }
 
 bool Params::set_param_by_name_int(const char name[PARAMS_NAME_LENGTH], int32_t value)
@@ -344,6 +353,9 @@ bool Params::set_param_by_name_int(const char name[PARAMS_NAME_LENGTH], int32_t 
 
 bool Params::set_param_by_name_float(const char name[PARAMS_NAME_LENGTH], float value)
 {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wold-style-cast"
   return set_param_by_name_int(name, *(int32_t *) &value);
+#pragma GCC diagnostic pop
 }
 }
