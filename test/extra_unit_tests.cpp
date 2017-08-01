@@ -304,6 +304,60 @@ TEST(extra_unit_tests, equilibrium_torque)
   EXPECT_NE(rf.params_.get_param_float(PARAM_Z_EQ_TORQUE), 0);
 }
 
+TEST(extra_unit_tests, mixer_scaling)
+{
+  testBoard board;
+  ROSflight rf(board);
+  uint16_t stick_values[8];
+
+  err_free_rf_init(rf, board);
+
+  // send an arming signal
+  stick_values[0] = 1500;
+  stick_values[1] = 1500;
+  stick_values[2] = 1000;
+  stick_values[3] = 2000;
+  board.set_rc(stick_values);
+
+  // step long enough to arm
+  step_f(rf, board, 1.2e6);
+
+  // set throttle at full
+  center_controls(board, stick_values);
+  stick_values[2] = 2000;
+  board.set_rc(stick_values);
+  step_f(rf, board, 20e3);
+
+  // make sure all motors are at full output
+  for (int i = 0; i < 4; i++)
+  {
+    EXPECT_PRETTYCLOSE(rf.mixer_.get_outputs()[i], 1);
+  }
+
+  // command a turn
+  stick_values[0] = 1900;
+  stick_values[1] = 1900;
+  stick_values[3] = 1900;
+  board.set_rc(stick_values);
+  step_f(rf, board, 20e3);
+
+  int scaled_down_motors = 0;
+
+  // count how many motors have been throttled back
+  for (int i = 0; i < 4; i++)
+  {
+    //EXPECT_LT(rf.mixer_.get_outputs()[i], 1);
+    if (rf.mixer_.get_outputs()[i] < 1)
+    {
+      scaled_down_motors += 1;
+    }
+  }
+
+  // at least one, but not all of the motors should have been throttled back
+  EXPECT_GT(scaled_down_motors, 0);
+  EXPECT_LT(scaled_down_motors, 4);
+}
+
 TEST(extra_unit_tests, baro_calibration)
 {
   testBoard board;
