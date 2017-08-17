@@ -593,42 +593,35 @@ bool Sensors::OutlierFilter::update(float new_val, float *val)
 
 //======================================================
 // IMU orientation functions (These make arbitrary IMU orientations possible)
-float *transpose(float[3][3] matrix)
+void Sensors::transpose(float matrix[3][3], float output[3][3])
 {
-  float[3][3] transpose_matrix;
-  float *transpose_p;
-
   for (int i = 0; i < 3; i++)
   {
     for (int j = 0; j < 3; j++)
     {
-      transpose_matrix[i][j] = matrix[j][i];
+      output[i][j] = matrix[j][i];
     }
   }
-
-  // return pointer to transposed matrix
-  transpose_p = transpose_matrix;
-  return transpose_p;
 }
 
-void calculate_rotation_matrix()
+void Sensors::calculate_rotation_matrix()
 {
-  float phi = rf_.get_param_float(PARAM_IMU_YAW_ANGLE);
-  float theta = rf_.get_param_float(PARAM_IMU_PITCH_ANGLE);
-  float phi = rf_.get_param_float(PARAM_IMU_ROLL_ANGLE);
+  float psi = rf_.params_.get_param_float(PARAM_IMU_YAW_ANGLE);
+  float theta = rf_.params_.get_param_float(PARAM_IMU_PITCH_ANGLE);
+  float phi = rf_.params_.get_param_float(PARAM_IMU_ROLL_ANGLE);
   
   // calculate sins and cosines
-  float sin_phi = sin(phi);
-  float cosin_phi = cos(phi);
+  float sin_psi = sin(psi);
+  float cos_psi = cos(psi);
   float sin_theta = sin(theta);
-  float cosin_theta = cos(theta);
+  float cos_theta = cos(theta);
   float sin_phi = sin(phi);
-  float cosin_phi = cos(phi);
+  float cos_phi = cos(phi);
 
   // assemble body-to-IMU rotation matrix
-  float[3][3] body_to_imu_rotation;
+  float body_to_imu_rotation[3][3];
   body_to_imu_rotation[0][0] = cos_theta * cos_psi;
-  body_to_imu_rotation[0][1] = cos_theta * sin_psi
+  body_to_imu_rotation[0][1] = cos_theta * sin_psi;
   body_to_imu_rotation[0][2] = -sin_theta;
 
   body_to_imu_rotation[1][0] = sin_phi * sin_theta * cos_psi - cos_phi * sin_psi; 
@@ -640,12 +633,12 @@ void calculate_rotation_matrix()
   body_to_imu_rotation[2][2] = cos_phi * cos_theta;
   
   // transpose body-to-IMU matrix to get IMU-to-body rotation matrix
-  imu_to_body_rotation_ = transpose(body_to_imu_rotation);
+  transpose(body_to_imu_rotation, imu_to_body_rotation_);
 }
 
-void apply_rotation_matrix(float[3] data_vector)
+void Sensors::apply_rotation_matrix(float data_vector[3])
 {
-  float[3] data;
+  float data[3];
 
   for (int i = 0; i < 3; i++)
   {
