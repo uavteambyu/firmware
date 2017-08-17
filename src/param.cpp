@@ -244,6 +244,13 @@ void Params::set_defaults(void)
   init_param_int(PARAM_AILERON_REVERSE, "AIL_REV", 0); // reverses aileron servo output | 0 | 1
   init_param_int(PARAM_RUDDER_REVERSE, "RUDDER_REV", 0); // reverses rudder servo output | 0 | 1
 
+  /*************************************/
+  /*** IMU ORIENTATION CONFIGURATION ***/
+  /*************************************/
+  init_param_float(PARAM_IMU_ROLL_ANGLE, "IMU_ROLL_ANGLE", 0);
+  init_param_float(PARAM_IMU_PITCH_ANGLE, "IMU_PITCH_ANGLE", 0);
+  init_param_float(PARAM_IMU_YAW_ANGLE, "IMU_YAW_ANGLE", 0);
+
   /********************/
   /*** ARMING SETUP ***/
   /********************/

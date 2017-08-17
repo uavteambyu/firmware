@@ -196,6 +196,13 @@ enum : uint16_t
   PARAM_ELEVATOR_REVERSE,
   PARAM_AILERON_REVERSE,
   PARAM_RUDDER_REVERSE,
+  
+  /*************************************/
+  /*** IMU ORIENTATION CONFIGURATION ***/
+  /*************************************/
+  PARAM_IMU_ROLL_ANGLE,
+  PARAM_IMU_PITCH_ANGLE,
+  PARAM_IMU_YAW_ANGLE,
 
   /********************/
   /*** ARMING SETUP ***/

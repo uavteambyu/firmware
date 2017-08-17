@@ -83,6 +83,9 @@ void Sensors::init()
   baro_outlier_filt_.init(BARO_MAX_CHANGE_RATE, BARO_SAMPLE_RATE, ground_pressure_);
   diff_outlier_filt_.init(DIFF_MAX_CHANGE_RATE, DIFF_SAMPLE_RATE, 0.0f);
   sonar_outlier_filt_.init(SONAR_MAX_CHANGE_RATE, SONAR_SAMPLE_RATE, 0.0f);
+
+  // calculate IMU frame to body frame rotation matrix
+  calculate_rotation_matrix();
 }
 
 
@@ -383,7 +386,7 @@ void Sensors::calibrate_accel(void)
                                           scalar_multiply(acc_temp_sum_, accel_temp_bias)));
 
     // Sanity Check -
-    // If the accelerometer is upside down or being spun around during the calibration,
+    // If the accelerometer is uphide down or being spun around during the calibration,
     // then don't do anything
     if (norm(vector_sub(max_, min_)) > 1.0)
     {
@@ -585,6 +588,76 @@ bool Sensors::OutlierFilter::update(float new_val, float *val)
   {
     window_size_++;
     return false;
+  }
+}
+
+//======================================================
+// IMU orientation functions (These make arbitrary IMU orientations possible)
+float *transpose(float[3][3] matrix)
+{
+  float[3][3] transpose_matrix;
+  float *transpose_p;
+
+  for (int i = 0; i < 3; i++)
+  {
+    for (int j = 0; j < 3; j++)
+    {
+      transpose_matrix[i][j] = matrix[j][i];
+    }
+  }
+
+  // return pointer to transposed matrix
+  transpose_p = transpose_matrix;
+  return transpose_p;
+}
+
+void calculate_rotation_matrix()
+{
+  float phi = rf_.get_param_float(PARAM_IMU_YAW_ANGLE);
+  float theta = rf_.get_param_float(PARAM_IMU_PITCH_ANGLE);
+  float phi = rf_.get_param_float(PARAM_IMU_ROLL_ANGLE);
+  
+  // calculate sins and cosines
+  float sin_phi = sin(phi);
+  float cosin_phi = cos(phi);
+  float sin_theta = sin(theta);
+  float cosin_theta = cos(theta);
+  float sin_phi = sin(phi);
+  float cosin_phi = cos(phi);
+
+  // assemble body-to-IMU rotation matrix
+  float[3][3] body_to_imu_rotation;
+  body_to_imu_rotation[0][0] = cos_theta * cos_psi;
+  body_to_imu_rotation[0][1] = cos_theta * sin_psi
+  body_to_imu_rotation[0][2] = -sin_theta;
+
+  body_to_imu_rotation[1][0] = sin_phi * sin_theta * cos_psi - cos_phi * sin_psi; 
+  body_to_imu_rotation[1][1] = sin_phi * sin_theta * sin_psi + cos_phi * cos_psi;
+  body_to_imu_rotation[1][2] = sin_phi * cos_theta;
+
+  body_to_imu_rotation[2][0] = cos_phi * sin_theta * cos_psi + sin_phi * sin_psi; 
+  body_to_imu_rotation[2][1] = cos_phi * sin_theta * sin_psi - sin_phi * cos_psi;
+  body_to_imu_rotation[2][2] = cos_phi * cos_theta;
+  
+  // transpose body-to-IMU matrix to get IMU-to-body rotation matrix
+  imu_to_body_rotation_ = transpose(body_to_imu_rotation);
+}
+
+void apply_rotation_matrix(float[3] data_vector)
+{
+  float[3] data;
+
+  for (int i = 0; i < 3; i++)
+  {
+    data[i] = data_vector[i];
+  }
+
+  for (int i = 0; i < 3; i++)
+  {
+    for (int j = 0; j < 3; j++)
+    {
+      data_vector[i] += imu_to_body_rotation_[i][j] * data[j];
+    }
   }
 }
 

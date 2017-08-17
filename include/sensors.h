@@ -155,7 +155,10 @@ private:
   void look_for_disabled_sensors(void);
   uint32_t last_time_look_for_disarmed_sensors_ = 0;
   uint32_t last_imu_update_ms_ = 0;
-
+  float *transpose(float[3][3] matrix);
+  void calculate_rotation_matrix();
+  void apply_rotation_matrix(float[3] data_vector);
+  
   bool new_imu_data_;
   bool imu_data_sent_;
 
@@ -189,6 +192,8 @@ private:
   OutlierFilter diff_outlier_filt_;
   OutlierFilter sonar_outlier_filt_;
 
+  // Arbitrary IMU orientation
+  float *imu_to_body_rotation_;
 };
 
 } // namespace rosflight_firmware
