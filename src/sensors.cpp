@@ -152,6 +152,7 @@ void Sensors::update_other_sensors()
     {
       float mag[3];
       rf_.board_.mag_read(mag);
+      apply_rotation_matrix(mag);
       data_.mag.x = mag[0];
       data_.mag.y = mag[1];
       data_.mag.z = mag[2];
@@ -265,6 +266,9 @@ bool Sensors::update_imu(void)
     {
       return false;
     }
+
+    apply_rotation_matrix(accel_);
+    apply_rotation_matrix(gyro_);
 
     data_.accel.x = accel_[0];
     data_.accel.y = accel_[1];
@@ -640,6 +644,7 @@ void Sensors::apply_rotation_matrix(float data_vector[3])
 {
   float data[3];
 
+  // make a copy of the input
   for (int i = 0; i < 3; i++)
   {
     data[i] = data_vector[i];
@@ -647,10 +652,9 @@ void Sensors::apply_rotation_matrix(float data_vector[3])
 
   for (int i = 0; i < 3; i++)
   {
-    for (int j = 0; j < 3; j++)
-    {
-      data_vector[i] += imu_to_body_rotation_[i][j] * data[j];
-    }
+    data_vector[i] = imu_to_body_rotation_[i][0] * data[0];
+    data_vector[i] += imu_to_body_rotation_[i][1] * data[1];
+    data_vector[i] += imu_to_body_rotation_[i][2] * data[2];
   }
 }
 

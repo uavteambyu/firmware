@@ -247,9 +247,9 @@ void Params::set_defaults(void)
   /*************************************/
   /*** IMU ORIENTATION CONFIGURATION ***/
   /*************************************/
-  init_param_float(PARAM_IMU_ROLL_ANGLE, "IMU_ROLL_ANGLE", 0);
-  init_param_float(PARAM_IMU_PITCH_ANGLE, "IMU_PITCH_ANGLE", 0);
-  init_param_float(PARAM_IMU_YAW_ANGLE, "IMU_YAW_ANGLE", 0);
+  init_param_float(PARAM_IMU_ROLL_ANGLE, "IMU_ROLL_ANGLE", 0.0f);
+  init_param_float(PARAM_IMU_PITCH_ANGLE, "IMU_PITCH_ANGLE", 0.0f);
+  init_param_float(PARAM_IMU_YAW_ANGLE, "IMU_YAW_ANGLE", 0.0f);
 
   /********************/
   /*** ARMING SETUP ***/
