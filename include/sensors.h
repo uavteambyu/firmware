@@ -63,6 +63,8 @@ public:
     float baro_temperature = 0;
     bool baro_valid = false;
 
+    float battery_voltage = 0;
+
     float sonar_range = 0;
     bool sonar_range_valid = false;
 
@@ -72,6 +74,7 @@ public:
     bool mag_present = false;
     bool sonar_present = false;
     bool diff_pressure_present = false;
+    bool battery_voltage_present = false;
   };
 
   Sensors(ROSflight& rosflight);
@@ -130,6 +133,7 @@ private:
     DIFF_PRESSURE,
     SONAR,
     MAGNETOMETER,
+    BATTERY_VOLAGE,
     NUM_LOW_PRIORITY_SENSORS
   };
 

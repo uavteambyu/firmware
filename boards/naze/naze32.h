@@ -106,6 +106,9 @@ public:
   bool sonar_check(void);
   float sonar_read(void);
 
+  bool adc_check(void);
+  float adc_read(uint8_t channel);
+
   // PWM
   // TODO make these deal in normalized (-1 to 1 or 0 to 1) values (not pwm-specific)
   void pwm_init(bool cppm, uint32_t refresh_rate, uint16_t idle_pwm);
