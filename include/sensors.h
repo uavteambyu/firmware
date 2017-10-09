@@ -74,7 +74,6 @@ public:
     bool mag_present = false;
     bool sonar_present = false;
     bool diff_pressure_present = false;
-    bool battery_voltage_present = false;
   };
 
   Sensors(ROSflight& rosflight);

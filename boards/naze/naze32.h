@@ -106,8 +106,7 @@ public:
   bool sonar_check(void);
   float sonar_read(void);
 
-  bool adc_check(void);
-  float adc_read(uint8_t channel);
+  float battery_voltage_read(void);
 
   // PWM
   // TODO make these deal in normalized (-1 to 1 or 0 to 1) values (not pwm-specific)

@@ -118,6 +118,9 @@ void Naze32::sensors_init()
   mb1242_init();
   ms4525_init();
 
+  // ADC, without channel 5
+  adcInit(false);
+
   // IMU
   uint16_t acc1G;
   mpu6050_init(true, &acc1G, &_gyro_scale, _board_revision);
@@ -236,6 +239,12 @@ float Naze32::sonar_read(void)
     return sonarRead(6);
   else
     return 0.0f;
+}
+
+float Naze32::battery_voltage_read(void)
+{
+  // battery voltage is on ADC channel 4
+  return adcGetChannel((uint8_t)0x04)
 }
 
 uint16_t num_sensor_errors(void)
