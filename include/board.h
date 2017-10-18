@@ -79,8 +79,7 @@ public:
   virtual bool sonar_check(void) = 0;
   virtual float sonar_read(void) = 0;
 
-  virtual bool adc_check(void) = 0;
-  virtual float adc_read(uint8_t channel) = 0;
+  virtual uint16_t battery_voltage_read(void) = 0;
 
 // PWM
 // TODO make these deal in normalized (-1 to 1 or 0 to 1) values (not pwm-specific)

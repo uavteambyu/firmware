@@ -63,7 +63,7 @@ public:
     float baro_temperature = 0;
     bool baro_valid = false;
 
-    float battery_voltage = 0;
+    uint16_t battery_voltage = 0;
 
     float sonar_range = 0;
     bool sonar_range_valid = false;

@@ -106,7 +106,7 @@ public:
   bool sonar_check(void);
   float sonar_read(void);
 
-  float battery_voltage_read(void);
+  uint16_t battery_voltage_read(void);
 
   // PWM
   // TODO make these deal in normalized (-1 to 1 or 0 to 1) values (not pwm-specific)

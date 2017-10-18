@@ -153,6 +153,9 @@ void Sensors::update_other_sensors()
       correct_mag();
     }
     break;
+  case LowPrioritySensors::BATTERY_VOLAGE:
+    data_.battery_voltage = rf_.board_.battery_voltage_read();
+    break;
   default:
     break;
   }

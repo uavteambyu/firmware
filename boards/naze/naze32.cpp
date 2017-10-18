@@ -241,9 +241,10 @@ float Naze32::sonar_read(void)
     return 0.0f;
 }
 
-float Naze32::battery_voltage_read(void)
+uint16_t Naze32::battery_voltage_read(void)
 {
   // battery voltage is on ADC channel 4
+  // Not sure what the value this returns actually represents
   return adcGetChannel((uint8_t)0x04)
 }
 
