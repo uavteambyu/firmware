@@ -64,6 +64,7 @@ typedef struct
   control_channel_t y;
   control_channel_t z;
   control_channel_t F;
+  control_channel_t bomb_drop;
 } control_t;
 
 class CommandManager
@@ -78,12 +79,13 @@ private:
     control_channel_t *combined;
   } mux_t;
 
-  mux_t muxes[4] =
+  mux_t muxes[5] =
   {
     {&rc_command_.x, &offboard_command_.x, &combined_command_.x},
     {&rc_command_.y, &offboard_command_.y, &combined_command_.y},
     {&rc_command_.z, &offboard_command_.z, &combined_command_.z},
-    {&rc_command_.F, &offboard_command_.F, &combined_command_.F}
+    {&rc_command_.F, &offboard_command_.F, &combined_command_.F},
+    {&rc_command_.bomb_drop, &offboard_command_.bomb_drop, &combined_command_.bomb_drop}
   };
 
   control_t rc_command_ =
@@ -92,7 +94,8 @@ private:
     {false, ANGLE, 0.0},
     {false, ANGLE, 0.0},
     {false, RATE, 0.0},
-    {false, THROTTLE, 0.0}
+    {false, THROTTLE, 0.0},
+    {false, PASSTHROUGH, 0.0}
   };
   control_t offboard_command_ =
   {
@@ -100,7 +103,8 @@ private:
     {false, ANGLE, 0.0},
     {false, ANGLE, 0.0},
     {false, RATE, 0.0},
-    {false, THROTTLE, 0.0}
+    {false, THROTTLE, 0.0},
+    {false, PASSTHROUGH, 0.0}
   };
   control_t combined_command_ =
   {
@@ -108,7 +112,8 @@ private:
     {false, ANGLE, 0.0},
     {false, ANGLE, 0.0},
     {false, RATE, 0.0},
-    {false, THROTTLE, 0.0}
+    {false, THROTTLE, 0.0},
+    {false, PASSTHROUGH, 0.0}
   };
 
   control_t multirotor_failsafe_command_ =
@@ -125,7 +130,8 @@ private:
     {true, PASSTHROUGH, 0.0},
     {true, PASSTHROUGH, 0.0},
     {true, PASSTHROUGH, 0.0},
-    {true, THROTTLE, 0.0}
+    {true, THROTTLE, 0.0},
+    {true, PASSTHROUGH, 0.0}
   };
 
   typedef enum
@@ -140,6 +146,7 @@ private:
     MUX_Y,
     MUX_Z,
     MUX_F,
+    MUX_BOMB_DROP
   };
 
   typedef struct
@@ -168,7 +175,7 @@ private:
   bool do_roll_pitch_yaw_muxing(MuxChannel channel);
   bool do_throttle_muxing(void);
   void do_min_throttle_muxing();
-
+  bool do_bomb_drop_muxing(void);
   void interpret_rc(void);
   bool stick_deviated(MuxChannel channel);
 

@@ -35,85 +35,89 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-namespace rosflight_firmware
-{
+namespace rosflight_firmware {
 
-class ROSflight;
+    class ROSflight;
 
-class RC
-{
+    class RC {
 
-public:
-  enum Stick
-  {
-    STICK_X,
-    STICK_Y,
-    STICK_Z,
-    STICK_F,
-    STICKS_COUNT
-  };
+    public:
+        enum Stick {
+            STICK_X,
+            STICK_Y,
+            STICK_Z,
+            STICK_F,
+            STICKS_COUNT
+        };
 
-  enum Switch
-  {
-    SWITCH_ARM,
-    SWITCH_ATT_OVERRIDE,
-    SWITCH_THROTTLE_OVERRIDE,
-    SWITCH_ATT_TYPE,
-    SWITCHES_COUNT
-  };
+        enum Switch {
+            SWITCH_ARM,
+            SWITCH_ATT_OVERRIDE,
+            SWITCH_THROTTLE_OVERRIDE,
+            SWITCH_ATT_TYPE,
+            SWITCH_BOMB_DROP,
+            SWITCHES_COUNT
+        };
 
-  RC(ROSflight& _rf);
+        RC(ROSflight &_rf);
 
-  typedef enum
-  {
-    PARALLEL_PWM,
-    CPPM,
-  } rc_type_t;
+        typedef enum {
+            PARALLEL_PWM,
+            CPPM,
+        } rc_type_t;
 
-  void init();
-  float stick(Stick channel);
-  bool switch_on(Switch channel);
-  bool switch_mapped(Switch channel);
-  bool run();
-  bool new_command();
-  void param_change_callback(uint16_t param_id);
+        void init();
 
-private:
-  ROSflight& RF_;
+        float stick(Stick channel);
 
-  typedef struct
-  {
-    uint8_t channel;
-    int8_t direction;
-    bool mapped;
-  } rc_switch_config_t;
+        bool switch_on(Switch channel);
 
-  typedef struct
-  {
-    uint8_t channel;
-    bool one_sided;
-  } rc_stick_config_t;
+        bool switch_mapped(Switch channel);
 
-  bool new_command_;
+        bool run();
 
-  uint32_t time_of_last_stick_deviation = 0;
-  uint32_t time_sticks_have_been_in_arming_position_ms = 0;
-  uint32_t prev_time_ms = 0;
-  uint32_t last_rc_receive_time = 0;
+        bool new_command();
 
-  rc_stick_config_t sticks[STICKS_COUNT];
-  rc_switch_config_t switches[SWITCHES_COUNT];
+        void param_change_callback(uint16_t param_id);
 
-  bool switch_values[SWITCHES_COUNT];
-  float stick_values[STICKS_COUNT];
+    private:
+        ROSflight &RF_;
 
-  void init_rc();
-  void init_switches();
-  void init_sticks();
-  bool check_rc_lost();
-  void look_for_arm_disarm_signal();
-};
+        typedef struct {
+            uint8_t channel;
+            int8_t direction;
+            bool mapped;
+        } rc_switch_config_t;
 
-} // namespace rosflight_firmware
+        typedef struct {
+            uint8_t channel;
+            bool one_sided;
+        } rc_stick_config_t;
+
+        bool new_command_;
+
+        uint32_t time_of_last_stick_deviation = 0;
+        uint32_t time_sticks_have_been_in_arming_position_ms = 0;
+        uint32_t prev_time_ms = 0;
+        uint32_t last_rc_receive_time = 0;
+
+        rc_stick_config_t sticks[STICKS_COUNT];
+        rc_switch_config_t switches[SWITCHES_COUNT];
+
+        bool switch_values[SWITCHES_COUNT];
+        float stick_values[STICKS_COUNT];
+
+        void init_rc();
+
+        void init_switches();
+
+        void init_sticks();
+
+        bool check_rc_lost();
+
+        void look_for_arm_disarm_signal();
+
+    };
+}// namespace rosflight_firmware
 
 #endif // ROSLFLIGHT_FIRMWARE_RC_H

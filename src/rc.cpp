@@ -45,6 +45,7 @@ void RC::init()
   RF_.params_.add_callback(std::bind(&RC::param_change_callback, this, std::placeholders::_1), PARAM_RC_THROTTLE_OVERRIDE_CHANNEL);
   RF_.params_.add_callback(std::bind(&RC::param_change_callback, this, std::placeholders::_1), PARAM_RC_ATT_CONTROL_TYPE_CHANNEL);
   RF_.params_.add_callback(std::bind(&RC::param_change_callback, this, std::placeholders::_1), PARAM_RC_ARM_CHANNEL);
+  RF_.params_.add_callback(std::bind(&RC::param_change_callback, this, std::placeholders::_1), PARAM_RC_BOMB_DROP_CHANNEL);
   RF_.params_.add_callback(std::bind(&RC::param_change_callback, this, std::placeholders::_1), PARAM_RC_X_CHANNEL);
   RF_.params_.add_callback(std::bind(&RC::param_change_callback, this, std::placeholders::_1), PARAM_RC_Y_CHANNEL);
   RF_.params_.add_callback(std::bind(&RC::param_change_callback, this, std::placeholders::_1), PARAM_RC_Z_CHANNEL);
@@ -121,6 +122,10 @@ void RC::init_switches()
     case SWITCH_ATT_TYPE:
       strcpy(channel_name, "ATTITUDE TYPE");
       switches[chan].channel = RF_.params_.get_param_int(PARAM_RC_ATT_CONTROL_TYPE_CHANNEL);
+      break;
+    case SWITCH_BOMB_DROP:
+      strcpy(channel_name, "BOMB_DROP_CHANNEL");
+      switches[chan].channel = RF_.params_.get_param_int(PARAM_RC_BOMB_DROP_CHANNEL);
       break;
     default:
       strcpy(channel_name, "INVALID");

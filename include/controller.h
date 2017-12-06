@@ -54,6 +54,7 @@ public:
     float x;
     float y;
     float z;
+    float bomb_drop;
   };
 
   Controller(ROSflight& rf);

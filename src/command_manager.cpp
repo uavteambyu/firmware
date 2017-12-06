@@ -32,6 +32,7 @@
 
 #include <stdbool.h>
 #include <stdlib.h>
+#include <command_manager.h>
 
 #include "command_manager.h"
 #include "rosflight.h"
@@ -101,6 +102,8 @@ void CommandManager::interpret_rc(void)
   rc_command_.z.value = RF_.rc_.stick(RC::STICK_Z);
   rc_command_.F.value = RF_.rc_.stick(RC::STICK_F);
 
+  rc_command_.bomb_drop.value = RF_.rc_.switch_on(RC::SWITCH_BOMB_DROP) ? RF_.rc_.switch_on(RC::SWITCH_BOMB_DROP) : -RF_.rc_.switch_on(RC::SWITCH_BOMB_DROP);
+
   // determine control mode for each channel and scale command values accordingly
   if (RF_.params_.get_param_int(PARAM_FIXED_WING))
   {
@@ -108,6 +111,8 @@ void CommandManager::interpret_rc(void)
     rc_command_.y.type = PASSTHROUGH;
     rc_command_.z.type = PASSTHROUGH;
     rc_command_.F.type = THROTTLE;
+    rc_command_.bomb_drop.type = PASSTHROUGH;
+
   }
   else
   {
@@ -143,6 +148,7 @@ void CommandManager::interpret_rc(void)
 
     // throttle
     rc_command_.F.type = THROTTLE;
+
   }
 }
 
@@ -225,6 +231,23 @@ bool CommandManager::do_throttle_muxing(void)
   return override_this_channel;
 }
 
+bool CommandManager::do_bomb_drop_muxing(void)
+{
+    bool override_this_channel = false;
+    // Check if the override switch exists and is triggered
+    if (muxes[MUX_BOMB_DROP].onboard->active)
+    {
+        override_this_channel = false;
+    }
+    else
+    {
+        override_this_channel = true;
+    }
+    // Set the combined channel output depending on whether RC is overriding for this channel or not
+    *muxes[MUX_BOMB_DROP].combined = *muxes[MUX_BOMB_DROP].rc;
+    return override_this_channel;
+}
+
 bool CommandManager::rc_override_active()
 {
   return rc_override_;
@@ -281,6 +304,7 @@ bool CommandManager::run()
       offboard_command_.x.active = false;
       offboard_command_.y.active = false;
       offboard_command_.z.active = false;
+      offboard_command_.bomb_drop.active = false;
     }
 
     // Perform muxing
@@ -288,6 +312,7 @@ bool CommandManager::run()
     rc_override_ |= do_roll_pitch_yaw_muxing(MUX_Y);
     rc_override_ |= do_roll_pitch_yaw_muxing(MUX_Z);
     rc_override_ |= do_throttle_muxing();
+    rc_override_ |= do_bomb_drop_muxing();
 
     // Light to indicate override
     if (rc_override_)

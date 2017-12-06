@@ -30,6 +30,7 @@
  */
 
 #include <stdint.h>
+#include <mixer.h>
 
 #include "mixer.h"
 #include "rosflight.h"
@@ -167,7 +168,7 @@ void Mixer::mix_output()
     {
       // Matrix multiply to mix outputs
       unsaturated_outputs_[i] = (commands.F*mixer_to_use_->F[i] + commands.x*mixer_to_use_->x[i] +
-                              commands.y*mixer_to_use_->y[i] + commands.z*mixer_to_use_->z[i]);
+                              commands.y*mixer_to_use_->y[i] + commands.z*mixer_to_use_->z[i] + commands.bomb_drop*mixer_to_use_->bomb_drop[i]);
 
       // Save off the largest control output if it is greater than 1.0 for future scaling
       if (unsaturated_outputs_[i] > max_output)

@@ -43,45 +43,42 @@
 #include "state_manager.h"
 #include "command_manager.h"
 
-namespace rosflight_firmware
-{
+namespace rosflight_firmware {
 
-class ROSflight
-{
+    class ROSflight {
 
-private:
+    private:
 
 
-public:
-  ROSflight(Board& board);
+    public:
+        ROSflight(Board &board);
 
-  Board& board_;
-  Mavlink mavlink_;
+        Board &board_;
+        Mavlink mavlink_;
 
-  Params params_;
-  StateManager state_manager_;
-  Sensors sensors_;
-  Estimator estimator_;
-  CommandManager command_manager_;
-  Mixer mixer_;
-  Controller controller_;
-  RC rc_;
+        Params params_;
+        StateManager state_manager_;
+        Sensors sensors_;
+        Estimator estimator_;
+        CommandManager command_manager_;
+        Mixer mixer_;
+        Controller controller_;
+        RC rc_;
 
-  uint32_t loop_time_us;
+        uint32_t loop_time_us;
 
-  /**
-  * @brief Main initialization routine for the ROSflight autopilot flight stack
-  */
-  void init();
+        /**
+        * @brief Main initialization routine for the ROSflight autopilot flight stack
+        */
+        void init();
 
-  /**
-  * @brief Main loop for the ROSflight autopilot flight stack
-  */
-  void run();
+        /**
+        * @brief Main loop for the ROSflight autopilot flight stack
+        */
+        void run();
 
-  uint32_t get_loop_time_us();
-};
-
-} // namespace rosflight_firmware
+        uint32_t get_loop_time_us();
+    };
+}// namespace rosflight_firmware
 
 #endif // ROSFLIGHT_FIRMWARE_ROSFLIGHT_H
