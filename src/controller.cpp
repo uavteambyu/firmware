@@ -31,6 +31,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <command_manager.h>
 
 #include "command_manager.h"
 #include "estimator.h"
@@ -122,6 +123,7 @@ void Controller::run()
   output_.y = pid_output.y + RF_.params_.get_param_float(PARAM_Y_EQ_TORQUE);
   output_.z = pid_output.z + RF_.params_.get_param_float(PARAM_Z_EQ_TORQUE);
   output_.F = RF_.command_manager_.combined_control().F.value;
+  output_.bomb_drop = RF_.command_manager_.combined_control().bomb_drop.value;
 }
 
 void Controller::calculate_equilbrium_torque_from_rc()
