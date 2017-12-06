@@ -29,6 +29,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include <stdint.h>
+#include <command_manager.h>
 
 #include "mavlink.h"
 #include "rosflight.h"
@@ -278,12 +279,14 @@ void Mavlink::handle_msg_offboard_control(const mavlink_message_t *const msg)
   new_offboard_command.y.value = mavlink_offboard_control.y;
   new_offboard_command.z.value = mavlink_offboard_control.z;
   new_offboard_command.F.value = mavlink_offboard_control.F;
+  new_offboard_command.bomb_drop.value = mavlink_offboard_control.bomb_drop;
 
   // Move flags into standard message
   new_offboard_command.x.active = !(mavlink_offboard_control.ignore & IGNORE_VALUE1);
   new_offboard_command.y.active = !(mavlink_offboard_control.ignore & IGNORE_VALUE2);
   new_offboard_command.z.active = !(mavlink_offboard_control.ignore & IGNORE_VALUE3);
   new_offboard_command.F.active = !(mavlink_offboard_control.ignore & IGNORE_VALUE4);
+  new_offboard_command.bomb_drop.active = !(mavlink_offboard_control.ignore);
 
   // translate modes into standard message
   switch (mavlink_offboard_control.mode)
@@ -293,18 +296,21 @@ void Mavlink::handle_msg_offboard_control(const mavlink_message_t *const msg)
     new_offboard_command.y.type = PASSTHROUGH;
     new_offboard_command.z.type = PASSTHROUGH;
     new_offboard_command.F.type = THROTTLE;
+    new_offboard_command.bomb_drop.type = PASSTHROUGH;
     break;
   case MODE_ROLLRATE_PITCHRATE_YAWRATE_THROTTLE:
     new_offboard_command.x.type = RATE;
     new_offboard_command.y.type = RATE;
     new_offboard_command.z.type = RATE;
     new_offboard_command.F.type = THROTTLE;
+    new_offboard_command.bomb_drop.type = PASSTHROUGH;
     break;
   case MODE_ROLL_PITCH_YAWRATE_THROTTLE:
     new_offboard_command.x.type = ANGLE;
     new_offboard_command.y.type = ANGLE;
     new_offboard_command.z.type = RATE;
     new_offboard_command.F.type = THROTTLE;
+    new_offboard_command.bomb_drop.type = PASSTHROUGH;
     break;
     // Handle error state
   }
