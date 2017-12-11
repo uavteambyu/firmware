@@ -308,6 +308,7 @@ bool CommandManager::run()
       offboard_command_.x.active = false;
       offboard_command_.y.active = false;
       offboard_command_.z.active = false;
+      offboard_command_.bomb_drop.active = false;
     }
 
     // Perform muxing
