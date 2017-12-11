@@ -102,7 +102,7 @@ void CommandManager::interpret_rc(void)
   rc_command_.z.value = RF_.rc_.stick(RC::STICK_Z);
   rc_command_.F.value = RF_.rc_.stick(RC::STICK_F);
 
-  rc_command_.bomb_drop.value = RF_.rc_.switch_on(RC::SWITCH_BOMB_DROP) ? 1: -1;
+  rc_command_.bomb_drop.value = RF_.rc_.switch_on(RC::SWITCH_BOMB_DROP) ? 1.0: 0.0;
 
   // determine control mode for each channel and scale command values accordingly
   if (RF_.params_.get_param_int(PARAM_FIXED_WING))
@@ -308,7 +308,6 @@ bool CommandManager::run()
       offboard_command_.x.active = false;
       offboard_command_.y.active = false;
       offboard_command_.z.active = false;
-      offboard_command_.bomb_drop.active = false;
     }
 
     // Perform muxing

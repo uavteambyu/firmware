@@ -286,7 +286,7 @@ void Mavlink::handle_msg_offboard_control(const mavlink_message_t *const msg)
   new_offboard_command.y.active = !(mavlink_offboard_control.ignore & IGNORE_VALUE2);
   new_offboard_command.z.active = !(mavlink_offboard_control.ignore & IGNORE_VALUE3);
   new_offboard_command.F.active = !(mavlink_offboard_control.ignore & IGNORE_VALUE4);
-  new_offboard_command.bomb_drop.active = !(mavlink_offboard_control.ignore);
+  new_offboard_command.bomb_drop.active = (mavlink_offboard_control.bomb_drop == 1.0);
 
   // translate modes into standard message
   switch (mavlink_offboard_control.mode)
